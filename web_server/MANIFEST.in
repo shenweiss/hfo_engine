@@ -1,0 +1,3 @@
+graft hfo_engine_web/static
+graft hfo_engine_web/templates
+global-exclude *.pyc
