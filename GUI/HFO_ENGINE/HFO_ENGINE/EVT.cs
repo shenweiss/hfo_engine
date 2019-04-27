@@ -16,24 +16,22 @@ namespace HFO_ENGINE
         public EVT()
         {
             InitializeComponent();
-            EvtPath_txtBx.Text = Program.EvtFile;
         }
 
         private void Evt_save_btn_Click(object sender, EventArgs e)
         {
-            if (Program.IsAnalizing) Program.IsRunningMessage();
-            else Program.EvtFile = EvtPath_txtBx.Text;
+            Program.Controller.SetEvt(EvtPath_txtBx.Text);
         }
 
-        private void exportEVTbtn_Click_1(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(Program.TrcFile))
-            {
+        private void exportEVTbtn_Click_1(object sender, EventArgs e) {
+            if (string.IsNullOrEmpty(Program.Controller.GetTRCFile()))
                 MessageBox.Show("Please select a TRC file prior to setting the evt saving path.");
+            else{
+                var dialog = new FolderBrowserDialog();
+                dialog.ShowDialog();
+                EvtPath_txtBx.Text = dialog.SelectedPath;
             }
-            var dialog = new FolderBrowserDialog();
-            dialog.ShowDialog();
-            EvtPath_txtBx.Text = dialog.SelectedPath + "\\" + Path.GetFileNameWithoutExtension(Program.TrcFile) + ".evt";
+          
         }
         private void exportEVTbtn_MouseLeave(object sender, EventArgs e)
         {
@@ -45,6 +43,11 @@ namespace HFO_ENGINE
             exportEVTbtn.Size = new Size(60, 60);
             exportEVTbtn.Location = new Point(145, 45);
         }
-      
+
+        public void SetEvtFile(string evt_fname)
+        {
+            this.EvtPath_txtBx.Text = evt_fname;
+        }
+
     }
 }

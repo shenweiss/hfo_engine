@@ -1,26 +1,41 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace HFO_ENGINE
 {
-    public partial class Fastwave_conversor : Form
+    public partial class Fastwave_conversor : Form, INotifyPropertyChanged
     {
-        private MainWindow Parent_form;
-        public Fastwave_conversor(MainWindow parent)
+        //Constructor
+        public Fastwave_conversor()
         {
             InitializeComponent();
-            Parent_form = parent;
-            //this.conversor_start_btn.Click += async (s, e) => await conversor_start_btn_ClickAsync();
+            uploadProgressBar.DataBindings.Add("Value", this, "UploadProgress");
         }
 
+        //Colaborators 
+        private int _uploadProgress;
+        public event PropertyChangedEventHandler PropertyChanged;
+        public int UploadProgress
+        {
+            get { return _uploadProgress; }
+            set
+            {
+                _uploadProgress = value;
+                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("UploadProgress"));
+            }
+        }
+
+        //Methods
         private void SelectEDFbtn_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog1 = new OpenFileDialog
@@ -39,7 +54,6 @@ namespace HFO_ENGINE
             }
         }
 
-
         private void conversor_start_btn_Click(object sender, EventArgs e)
         {
             if (String.IsNullOrEmpty(EdfPath_txtBx.Text))
@@ -48,8 +62,11 @@ namespace HFO_ENGINE
             }
             else
             {
-                Program.StartEDFConversion(EdfPath_txtBx.Text, Parent_form);
+                Program.Controller.StartEdfConversion(EdfPath_txtBx.Text);
             }
         }
+        
+        
     }
+  
 }

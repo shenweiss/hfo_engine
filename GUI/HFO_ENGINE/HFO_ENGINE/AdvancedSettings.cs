@@ -16,37 +16,24 @@ namespace HFO_ENGINE
 {
     public partial class AdvancedSettings : Form
     {
-        public AdvancedSettings()
+        public AdvancedSettings(string host, string port, string log_file, string trc_temp_path)
         {
             InitializeComponent();
-            Hostname_txt.Text = Program.Hostname;
-            Port_txt.Text = Program.Port;
-            Logfile_txt.Text = Program.Log_file;
-            TrcTemp_txt.Text = Program.TrcTempDir;
+            Hostname_txt.Text = host;
+            Port_txt.Text = port;
+            Logfile_txt.Text = log_file;
+            TrcTemp_txt.Text = trc_temp_path;
         }
 
         private void AdvancedSettings_save_btn_Click(object sender, EventArgs e)
         {
-            if (Program.IsAnalizing)
-            {
-                Program.IsRunningMessage();
-            }
-            else
-            {
-                Program.Hostname = Hostname_txt.Text;
-                Program.Port = Port_txt.Text;
-                Program.API_URI = "http://" + Program.Hostname + ":" + Program.Port + "/";
-                Program.Log_file = Logfile_txt.Text;
-                Program.TrcTempDir = TrcTemp_txt.Text;
-            }
+            Program.Controller.SetAdvancedSettings(Hostname_txt.Text, Port_txt.Text,
+                                                   Logfile_txt.Text, TrcTemp_txt.Text);
         }
 
         private void test_btn_Click(object sender, EventArgs e)
         {
-            string index_uri = Program.API_URI;
-            string json_index_str = Program.GetJsonSync(index_uri);
-            JsonObject json_index = (JsonObject)JsonValue.Parse(json_index_str);
-            MessageBox.Show(json_index["message"]);
+            Program.Controller.TestConnection();
         }
     }
 }

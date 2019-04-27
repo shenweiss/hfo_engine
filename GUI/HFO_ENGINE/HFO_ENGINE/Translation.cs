@@ -12,17 +12,12 @@ namespace HFO_ENGINE
 {
     public partial class Translation : Form
     {
-        private MainWindow Parent_form;
         private Dictionary<string, string> Translations;
-        private string EdfFname;
 
-        public Translation(MainWindow parent)
+        public Translation(Dictionary<string, string> translations)
         {
             InitializeComponent();
-            Parent_form = parent;
-            Translations = Program.ConversionParameters.ch_names_mapping;
-            EdfFname = Program.ConversionParameters.edf_fname;
-
+            Translations = translations;
             int number = 0;
             foreach (var translation in Translations)
             {
@@ -49,15 +44,9 @@ namespace HFO_ENGINE
             }
         }
 
-
         private void Confirm_translations_btn_Click(object sender, EventArgs e)
         {
-            foreach(var translation in Translations)
-            {
-                Program.ConversionParameters.ch_names_mapping[translation.Key] = translation.Value; //VER Si esto actualiza
-            }
-
-            Program.GoToFinalConversion(Parent_form);
+            Program.Controller.ConfirmChMapping(Translations);
         }
     }
 }

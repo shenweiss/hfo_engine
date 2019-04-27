@@ -84,7 +84,7 @@
             // timer
             // 
             this.timer.Interval = 1000;
-            this.timer.Tick += new System.EventHandler(this.timer_Tick);
+            this.timer.Tick += new System.EventHandler(this.Timer_Tick);
             // 
             // label6
             // 
@@ -201,6 +201,7 @@
             this.previous_hs_txt.Name = "previous_hs_txt";
             this.previous_hs_txt.Size = new System.Drawing.Size(75, 20);
             this.previous_hs_txt.TabIndex = 47;
+            this.previous_hs_txt.Text = "00";
             this.previous_hs_txt.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label3
@@ -239,6 +240,7 @@
             this.previous_min_txt.Name = "previous_min_txt";
             this.previous_min_txt.Size = new System.Drawing.Size(75, 20);
             this.previous_min_txt.TabIndex = 49;
+            this.previous_min_txt.Text = "00";
             this.previous_min_txt.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label9
@@ -264,6 +266,7 @@
             this.previous_snds_txt.Name = "previous_snds_txt";
             this.previous_snds_txt.Size = new System.Drawing.Size(75, 20);
             this.previous_snds_txt.TabIndex = 51;
+            this.previous_snds_txt.Text = "00";
             this.previous_snds_txt.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // Progress

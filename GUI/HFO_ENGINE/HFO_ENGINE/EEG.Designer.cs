@@ -33,12 +33,12 @@
             this.EEG_title = new System.Windows.Forms.Label();
             this.EEG_save_btn = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.uploadProgressBar = new System.Windows.Forms.ProgressBar();
             this.TrcPath_txtBx = new System.Windows.Forms.TextBox();
             this.BrowseTRCbtn = new System.Windows.Forms.PictureBox();
             this.line = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.uploadProgressBar = new System.Windows.Forms.ProgressBar();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.BrowseTRCbtn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -96,6 +96,13 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(360, 320);
             this.panel2.TabIndex = 9;
+            // 
+            // uploadProgressBar
+            // 
+            this.uploadProgressBar.Location = new System.Drawing.Point(0, 231);
+            this.uploadProgressBar.Name = "uploadProgressBar";
+            this.uploadProgressBar.Size = new System.Drawing.Size(357, 10);
+            this.uploadProgressBar.TabIndex = 14;
             // 
             // TrcPath_txtBx
             // 
@@ -157,13 +164,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(390, 95);
             this.panel1.TabIndex = 10;
-            // 
-            // uploadProgressBar
-            // 
-            this.uploadProgressBar.Location = new System.Drawing.Point(0, 231);
-            this.uploadProgressBar.Name = "uploadProgressBar";
-            this.uploadProgressBar.Size = new System.Drawing.Size(357, 10);
-            this.uploadProgressBar.TabIndex = 14;
             // 
             // EEG
             // 

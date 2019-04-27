@@ -13,18 +13,14 @@ namespace HFO_ENGINE
 {
     public partial class TimeWindow : Form
     {
-        public TimeWindow() //assumes Program.Trc_duration to be setted
+        //REQUIRES: TRCs metadata setted.
+        public TimeWindow() //
         {
             InitializeComponent();
-            seconds_to_timer(Program.Trc_duration, trc_duration_picker);
-            seconds_to_timer(Program.StartTime, start_time_picker);
-            seconds_to_timer(Program.StopTime, stop_time_picker);
-
-            //int len_hours = Program.Trc_duration / 3600;
-            //int len_minutes = (Program.Trc_duration - len_hours * 3600) / 60;
-            //int len_snds = Program.Trc_duration - len_hours * 3600 - len_minutes * 60; ;
-            //TRC_duration_visible_text.Text = len_hours.ToString() + ":" + len_minutes.ToString() + ":" + len_snds.ToString();
-
+            
+        }
+        public void SetTRCDuration(int duration_snds) {
+            seconds_to_timer(duration_snds, trc_duration_picker);
         }
 
         private void seconds_to_timer(int seconds, DateTimePicker dt) {
@@ -40,33 +36,9 @@ namespace HFO_ENGINE
 
         private void TimeWindow_save_btn_Click(object sender, EventArgs e)
         {
-            if (Program.IsAnalizing) {
-                Program.IsRunningMessage();
-            }            
-            else{
-                int str_time = timer_to_seconds(start_time_picker);
-                int stp_time = timer_to_seconds(stop_time_picker);
-
-                if (str_time < 0)
-                {
-                    MessageBox.Show("Changes were NOT saved because start time must be greater or equal to 0.");
-                    return;
-                }
-                if (stp_time > Program.Trc_duration){
-                    MessageBox.Show("Changes were NOT saved because stop time is greater than TRC_duration.");
-                    return;
-                }
-                if (str_time > stp_time)
-                {
-                    MessageBox.Show("Changes were NOT saved because start time is greater than stop time.");
-                    return;
-                }
-                Program.StartTime = str_time;
-                Program.StopTime = stp_time;
-            }
-
-
+            int start_time = timer_to_seconds(start_time_picker);
+            int stop_time = timer_to_seconds(stop_time_picker);
+            Program.Controller.SetTimeWindow(start_time, stop_time);
         }
-
     }
 }

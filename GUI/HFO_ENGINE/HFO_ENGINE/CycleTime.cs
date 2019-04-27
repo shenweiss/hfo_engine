@@ -15,23 +15,8 @@ namespace HFO_ENGINE
         public CycleTime()
         {
             InitializeComponent();
-            Parallel_chk_bx.Checked = Program.MultiProcessingEnabled;
-            if (Parallel_chk_bx.Checked)
-            {
-                if (Convert.ToInt32(c_time_1_rBtn.Text) == Program.CycleTimeMin) c_time_1_rBtn.Checked = true;
-                if (Convert.ToInt32(c_time_2_rBtn.Text) == Program.CycleTimeMin) c_time_2_rBtn.Checked = true;
-                if (Convert.ToInt32(c_time_3_rBtn.Text) == Program.CycleTimeMin) c_time_3_rBtn.Checked = true;
-                if (Convert.ToInt32(c_time_4_rBtn.Text) == Program.CycleTimeMin) c_time_4_rBtn.Checked = true;
-
-            }
-            else {
-
-                c_time_1_rBtn.Enabled = false;
-                c_time_2_rBtn.Enabled = false;
-                c_time_3_rBtn.Enabled = false;
-                c_time_4_rBtn.Enabled = false;
-            }
         }
+
         private void Parallel_chk_bx_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox box = sender as CheckBox;
@@ -61,40 +46,15 @@ namespace HFO_ENGINE
 
         private void CycleTime_save_btn_Click(object sender, EventArgs e)
         {
-            if (Program.IsAnalizing) Program.IsRunningMessage();
-            else {
-                Program.MultiProcessingEnabled = Parallel_chk_bx.Checked;
-                if (Parallel_chk_bx.Checked){
-                    if (c_time_1_rBtn.Checked)
-                    {
-                        int value = Convert.ToInt32(c_time_1_rBtn.Text);
-                        Program.CycleTime = value * 60;
-                        Program.CycleTimeMin = value;
-                    }
-                    if (c_time_2_rBtn.Checked)
-                    {
-                        int value = Convert.ToInt32(c_time_2_rBtn.Text);
-                        Program.CycleTime = value * 60;
-                        Program.CycleTimeMin = value;
-                    }
-                    if (c_time_3_rBtn.Checked)
-                    {
-                        int value = Convert.ToInt32(c_time_3_rBtn.Text);
-                        Program.CycleTime = value * 60;
-                        Program.CycleTimeMin = value;
-                    }
-                    if (c_time_4_rBtn.Checked)
-                    {
-                        int value = Convert.ToInt32(c_time_4_rBtn.Text);
-                        Program.CycleTime = value * 60;
-                        Program.CycleTimeMin = value;
-                    }
-                }
-                else {
-                    Program.CycleTime = -1;
-                    Program.CycleTimeMin = 0;
-                }
+            bool parallel_flag = Parallel_chk_bx.Checked;
+            int cycle_time = 0;
+            if (parallel_flag) {
+                if (c_time_1_rBtn.Checked) cycle_time = Convert.ToInt32(c_time_1_rBtn.Text) * 60;
+                if (c_time_2_rBtn.Checked) cycle_time = Convert.ToInt32(c_time_2_rBtn.Text) * 60;
+                if (c_time_3_rBtn.Checked) cycle_time = Convert.ToInt32(c_time_3_rBtn.Text) * 60;
+                if (c_time_4_rBtn.Checked) cycle_time = Convert.ToInt32(c_time_4_rBtn.Text) * 60;
             }
+            Program.Controller.SetCycleTime(parallel_flag, cycle_time);
         }
     }
 

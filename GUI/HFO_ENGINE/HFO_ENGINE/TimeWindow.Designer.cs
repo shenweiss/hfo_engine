@@ -34,14 +34,14 @@
             this.StopTimeLabel = new System.Windows.Forms.Label();
             this.TimeWindow_save_btn = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.TRC_duration_visible_text = new System.Windows.Forms.Label();
+            this.trc_duration_picker = new System.Windows.Forms.DateTimePicker();
             this.label3 = new System.Windows.Forms.Label();
             this.stop_time_picker = new System.Windows.Forms.DateTimePicker();
             this.start_time_picker = new System.Windows.Forms.DateTimePicker();
+            this.label1 = new System.Windows.Forms.Label();
+            this.TRC_duration_visible_text = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.trc_duration_picker = new System.Windows.Forms.DateTimePicker();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -111,16 +111,19 @@
             this.panel2.Size = new System.Drawing.Size(388, 320);
             this.panel2.TabIndex = 11;
             // 
-            // TRC_duration_visible_text
+            // trc_duration_picker
             // 
-            this.TRC_duration_visible_text.BackColor = System.Drawing.Color.Transparent;
-            this.TRC_duration_visible_text.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.TRC_duration_visible_text.Font = new System.Drawing.Font("Microsoft Sans Serif", 13F);
-            this.TRC_duration_visible_text.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.TRC_duration_visible_text.Location = new System.Drawing.Point(-3, 9);
-            this.TRC_duration_visible_text.Name = "TRC_duration_visible_text";
-            this.TRC_duration_visible_text.Size = new System.Drawing.Size(114, 26);
-            this.TRC_duration_visible_text.TabIndex = 73;
+            this.trc_duration_picker.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.trc_duration_picker.CustomFormat = "HH:mm:ss";
+            this.trc_duration_picker.Enabled = false;
+            this.trc_duration_picker.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F);
+            this.trc_duration_picker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+            this.trc_duration_picker.Location = new System.Drawing.Point(287, 3);
+            this.trc_duration_picker.Name = "trc_duration_picker";
+            this.trc_duration_picker.ShowUpDown = true;
+            this.trc_duration_picker.Size = new System.Drawing.Size(98, 29);
+            this.trc_duration_picker.TabIndex = 74;
+            this.trc_duration_picker.Value = new System.DateTime(2019, 3, 21, 12, 1, 0, 0);
             // 
             // label3
             // 
@@ -160,6 +163,29 @@
             this.start_time_picker.TabIndex = 67;
             this.start_time_picker.Value = new System.DateTime(2019, 3, 21, 12, 1, 0, 0);
             // 
+            // label1
+            // 
+            this.label1.BackColor = System.Drawing.Color.Transparent;
+            this.label1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F);
+            this.label1.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.label1.Location = new System.Drawing.Point(4, 75);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(289, 26);
+            this.label1.TabIndex = 9;
+            this.label1.Text = "Relative to that range, set the time-window";
+            // 
+            // TRC_duration_visible_text
+            // 
+            this.TRC_duration_visible_text.BackColor = System.Drawing.Color.Transparent;
+            this.TRC_duration_visible_text.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.TRC_duration_visible_text.Font = new System.Drawing.Font("Microsoft Sans Serif", 13F);
+            this.TRC_duration_visible_text.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.TRC_duration_visible_text.Location = new System.Drawing.Point(-3, 9);
+            this.TRC_duration_visible_text.Name = "TRC_duration_visible_text";
+            this.TRC_duration_visible_text.Size = new System.Drawing.Size(114, 26);
+            this.TRC_duration_visible_text.TabIndex = 73;
+            // 
             // panel1
             // 
             this.panel1.Controls.Add(this.Times_title);
@@ -180,32 +206,6 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 9;
             this.pictureBox1.TabStop = false;
-            // 
-            // label1
-            // 
-            this.label1.BackColor = System.Drawing.Color.Transparent;
-            this.label1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F);
-            this.label1.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.label1.Location = new System.Drawing.Point(4, 75);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(289, 26);
-            this.label1.TabIndex = 9;
-            this.label1.Text = "Relative to that range, set the time-window";
-            // 
-            // trc_duration_picker
-            // 
-            this.trc_duration_picker.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.trc_duration_picker.CustomFormat = "HH:mm:ss";
-            this.trc_duration_picker.Enabled = false;
-            this.trc_duration_picker.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F);
-            this.trc_duration_picker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.trc_duration_picker.Location = new System.Drawing.Point(287, 3);
-            this.trc_duration_picker.Name = "trc_duration_picker";
-            this.trc_duration_picker.ShowUpDown = true;
-            this.trc_duration_picker.Size = new System.Drawing.Size(98, 29);
-            this.trc_duration_picker.TabIndex = 74;
-            this.trc_duration_picker.Value = new System.DateTime(2019, 3, 21, 12, 1, 0, 0);
             // 
             // TimeWindow
             // 

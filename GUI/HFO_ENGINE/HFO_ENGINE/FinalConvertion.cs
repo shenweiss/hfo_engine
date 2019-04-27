@@ -11,36 +11,52 @@ using System.Windows.Forms;
 
 namespace HFO_ENGINE
 {
-    public partial class FinalConvertion : Form
+    public partial class FinalConvertion : Form, INotifyPropertyChanged
     {
-        private string edf_fname;
+        
+        //Constructor     
         public FinalConvertion( )
         {
             InitializeComponent();
-            edf_fname = Program.ConversionParameters.edf_fname;
         }
 
+        //Colaborators
+        private string EdfFile(){
+            return Program.Controller.GetConvParams().edf_fname;
+        }
+        private int _uploadProgress;
+        public event PropertyChangedEventHandler PropertyChanged;
+        public int Progress
+        {
+            get { return _uploadProgress; }
+            set
+            {
+                _uploadProgress = value;
+                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("UploadProgress"));
+            }
+        }
 
+        //Methods
         private void browse_trc_out_dir_Click_1(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(edf_fname))
+            if (string.IsNullOrEmpty(this.EdfFile()))
             {
                 MessageBox.Show("Please select an EDF file prior to setting the output saving path.");
             }
             var dialog = new FolderBrowserDialog();
             dialog.ShowDialog();
-            Trc_out_conv_dir_txt.Text = dialog.SelectedPath + "\\" + Path.GetFileNameWithoutExtension(edf_fname) + ".TRC";
+            Trc_out_conv_dir_txt.Text = dialog.SelectedPath + "\\" + Path.GetFileNameWithoutExtension(this.EdfFile()) + ".TRC";
         }
 
         private void ConvertButton_Click(object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(edf_fname) || String.IsNullOrEmpty(Trc_out_conv_dir_txt.Text))
+            if (String.IsNullOrEmpty(Trc_out_conv_dir_txt.Text))
             {
                 MessageBox.Show("Please select an EDF file and set the the output saving path.");
             }
             else
             {
-                Program.ConvertEDF(Trc_out_conv_dir_txt.Text);
+               Program.Controller.ConvertEdf(Trc_out_conv_dir_txt.Text);
             }
         }
     }

@@ -37,6 +37,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.SavingConvTrcDir = new System.Windows.Forms.Label();
             this.ConvertButton = new System.Windows.Forms.Button();
+            this.uploadProgressBar = new System.Windows.Forms.ProgressBar();
             this.panel4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.browse_trc_out_dir)).BeginInit();
@@ -138,12 +139,20 @@
             this.ConvertButton.UseVisualStyleBackColor = true;
             this.ConvertButton.Click += new System.EventHandler(this.ConvertButton_Click);
             // 
+            // uploadProgressBar
+            // 
+            this.uploadProgressBar.Location = new System.Drawing.Point(17, 414);
+            this.uploadProgressBar.Name = "uploadProgressBar";
+            this.uploadProgressBar.Size = new System.Drawing.Size(357, 10);
+            this.uploadProgressBar.TabIndex = 43;
+            // 
             // FinalConvertion
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
             this.ClientSize = new System.Drawing.Size(464, 473);
+            this.Controls.Add(this.uploadProgressBar);
             this.Controls.Add(this.ConvertButton);
             this.Controls.Add(this.browse_trc_out_dir);
             this.Controls.Add(this.Trc_out_conv_dir_txt);
@@ -171,5 +180,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label SavingConvTrcDir;
         private System.Windows.Forms.Button ConvertButton;
+        private System.Windows.Forms.ProgressBar uploadProgressBar;
     }
 }

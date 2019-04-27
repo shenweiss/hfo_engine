@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Fastwave_conversor));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.uploadProgressBar = new System.Windows.Forms.ProgressBar();
             this.EdfPath_txtBx = new System.Windows.Forms.TextBox();
             this.SelectEDFbtn = new System.Windows.Forms.PictureBox();
             this.line = new System.Windows.Forms.Label();
@@ -46,6 +47,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.uploadProgressBar);
             this.panel1.Controls.Add(this.EdfPath_txtBx);
             this.panel1.Controls.Add(this.SelectEDFbtn);
             this.panel1.Controls.Add(this.line);
@@ -55,6 +57,13 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(360, 320);
             this.panel1.TabIndex = 34;
+            // 
+            // uploadProgressBar
+            // 
+            this.uploadProgressBar.Location = new System.Drawing.Point(0, 240);
+            this.uploadProgressBar.Name = "uploadProgressBar";
+            this.uploadProgressBar.Size = new System.Drawing.Size(357, 10);
+            this.uploadProgressBar.TabIndex = 36;
             // 
             // EdfPath_txtBx
             // 
@@ -104,7 +113,7 @@
             this.edf_import_label.Name = "edf_import_label";
             this.edf_import_label.Size = new System.Drawing.Size(208, 26);
             this.edf_import_label.TabIndex = 29;
-            this.edf_import_label.Text = "Browse TRC file to convert";
+            this.edf_import_label.Text = "Browse EDF file to convert";
             // 
             // conversor_start_btn
             // 
@@ -184,5 +193,6 @@
         private System.Windows.Forms.Panel panel4;
         private System.Windows.Forms.Label Convert_title;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.ProgressBar uploadProgressBar;
     }
 }
