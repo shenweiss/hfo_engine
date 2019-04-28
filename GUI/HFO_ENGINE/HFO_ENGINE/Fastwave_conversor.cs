@@ -57,13 +57,9 @@ namespace HFO_ENGINE
         private void conversor_start_btn_Click(object sender, EventArgs e)
         {
             if (String.IsNullOrEmpty(EdfPath_txtBx.Text))
-            {
                 MessageBox.Show("Please select an EDF file to be converted.");
-            }
             else
-            {
                 Program.Controller.StartEdfConversion(EdfPath_txtBx.Text);
-            }
         }
         
         

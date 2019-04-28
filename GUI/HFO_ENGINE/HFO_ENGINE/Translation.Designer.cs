@@ -38,11 +38,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.Confirm_translations_btn = new System.Windows.Forms.Button();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.PanelTranslation = new System.Windows.Forms.Panel();
             this.panel4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.PanelTranslations.SuspendLayout();
             this.PanelTranslation.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -59,6 +58,7 @@
             // 
             this.Translation_label.Font = new System.Drawing.Font("Arial", 22F);
             this.Translation_label.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.Translation_label.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.Translation_label.Location = new System.Drawing.Point(3, 10);
             this.Translation_label.Name = "Translation_label";
             this.Translation_label.Size = new System.Drawing.Size(269, 40);
@@ -69,6 +69,7 @@
             // 
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.pictureBox1.InitialImage = null;
             this.pictureBox1.Location = new System.Drawing.Point(292, 10);
             this.pictureBox1.Name = "pictureBox1";
@@ -80,13 +81,15 @@
             // PanelTranslations
             // 
             this.PanelTranslations.AutoScroll = true;
-            this.PanelTranslations.Location = new System.Drawing.Point(21, 118);
+            this.PanelTranslations.Controls.Add(this.PanelTranslation);
+            this.PanelTranslations.Location = new System.Drawing.Point(20, 120);
             this.PanelTranslations.Name = "PanelTranslations";
-            this.PanelTranslations.Size = new System.Drawing.Size(200, 322);
+            this.PanelTranslations.Size = new System.Drawing.Size(415, 327);
             this.PanelTranslations.TabIndex = 37;
             // 
             // LongNameTextBox
             // 
+            this.LongNameTextBox.Enabled = false;
             this.LongNameTextBox.Location = new System.Drawing.Point(0, 3);
             this.LongNameTextBox.Name = "LongNameTextBox";
             this.LongNameTextBox.Size = new System.Drawing.Size(91, 20);
@@ -103,6 +106,7 @@
             // 
             this.label2.Font = new System.Drawing.Font("Arial", 9F);
             this.label2.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.label2.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.label2.Location = new System.Drawing.Point(21, 95);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(94, 23);
@@ -113,6 +117,7 @@
             // 
             this.label3.Font = new System.Drawing.Font("Arial", 9F);
             this.label3.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.label3.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.label3.Location = new System.Drawing.Point(163, 95);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(49, 23);
@@ -126,32 +131,24 @@
             this.Confirm_translations_btn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Confirm_translations_btn.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold);
             this.Confirm_translations_btn.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.Confirm_translations_btn.Location = new System.Drawing.Point(254, 371);
+            this.Confirm_translations_btn.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.Confirm_translations_btn.Location = new System.Drawing.Point(219, 471);
             this.Confirm_translations_btn.Name = "Confirm_translations_btn";
-            this.Confirm_translations_btn.Size = new System.Drawing.Size(170, 35);
+            this.Confirm_translations_btn.Size = new System.Drawing.Size(183, 37);
             this.Confirm_translations_btn.TabIndex = 39;
             this.Confirm_translations_btn.Text = "Confirm translations";
             this.Confirm_translations_btn.UseVisualStyleBackColor = true;
             // 
-            // pictureBox2
-            // 
-            this.pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
-            this.pictureBox2.InitialImage = null;
-            this.pictureBox2.Location = new System.Drawing.Point(270, 207);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(141, 140);
-            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox2.TabIndex = 30;
-            this.pictureBox2.TabStop = false;
-            // 
             // PanelTranslation
             // 
+            this.PanelTranslation.AutoSize = true;
+            this.PanelTranslation.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.PanelTranslation.Controls.Add(this.ShortNameTextBox);
             this.PanelTranslation.Controls.Add(this.LongNameTextBox);
-            this.PanelTranslation.Location = new System.Drawing.Point(252, 118);
+            this.PanelTranslation.Location = new System.Drawing.Point(0, 0);
+            this.PanelTranslation.Margin = new System.Windows.Forms.Padding(0);
             this.PanelTranslation.Name = "PanelTranslation";
-            this.PanelTranslation.Size = new System.Drawing.Size(200, 31);
+            this.PanelTranslation.Size = new System.Drawing.Size(186, 26);
             this.PanelTranslation.TabIndex = 0;
             this.PanelTranslation.Visible = false;
             // 
@@ -160,20 +157,20 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
-            this.ClientSize = new System.Drawing.Size(464, 473);
-            this.Controls.Add(this.PanelTranslation);
+            this.ClientSize = new System.Drawing.Size(480, 542);
             this.Controls.Add(this.Confirm_translations_btn);
-            this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.panel4);
             this.Controls.Add(this.PanelTranslations);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.Name = "Translation";
             this.Text = "Translation";
             this.panel4.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.PanelTranslations.ResumeLayout(false);
+            this.PanelTranslations.PerformLayout();
             this.PanelTranslation.ResumeLayout(false);
             this.PanelTranslation.PerformLayout();
             this.ResumeLayout(false);
@@ -191,7 +188,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox ShortNameTextBox;
         private System.Windows.Forms.Button Confirm_translations_btn;
-        private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Panel PanelTranslation;
     }
 }

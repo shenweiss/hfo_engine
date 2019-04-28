@@ -288,8 +288,9 @@ namespace HFO_ENGINE{
             if (this.Model.IsBusy) this.UnavailableOptionMsg();
             else {
                 this.Model.IsBusy = true;
-               
                 string uri_upload = this.GetAPI().URI() + "upload";
+
+                /*
                 WebClient webClient = new WebClient();
                 void WebClientUploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
                 {
@@ -305,18 +306,23 @@ namespace HFO_ENGINE{
                 webClient.UploadProgressChanged += WebClientUploadProgressChanged;
                 webClient.UploadFileCompleted += WebClientUploadCompleted;
                 webClient.UploadFileAsync(new Uri(uri_upload), edf_fname);
+                */
+                this.GetChMapping("449_correct.edf");
             }
             
         }
+
         public void GetChMapping(string edf_fname)
         {
             string uri_suggestion = this.GetAPI().URI() + "edf_suggested_ch_map/" + Path.GetFileName(edf_fname);
             string suggestion_response = this.GetJsonSync(uri_suggestion);
-            MessageBox.Show(suggestion_response);
-            Dictionary<String, String> ch_mapping = ((ChannelMappingSuggestion)(JsonConvert.DeserializeObject<ChannelMappingSuggestion>(suggestion_response))).value["suggested_mapping"];
+            SuggestionResponse suggestion_response_dict = JsonConvert.DeserializeObject<SuggestionResponse>(suggestion_response);
+            this.Model.ConversionParams = new ConversionParams(Path.GetFileName(edf_fname), suggestion_response_dict.suggested_mapping); //Save server suggestion
+            //Load screen with suggestion
+            this.Model.Conversion_2_Form = new Translation(suggestion_response_dict.suggested_mapping); 
+            if (this.GetScreen_Home() == null) MessageBox.Show("DEBUG: HOME IS NULL!");
 
-            this.Model.ConversionParams = new ConversionParams(Path.GetFileName(edf_fname), ch_mapping); //Save server suggestion
-            this.Model.Conversion_2_Form = new Translation( this.GetConvParams().ch_names_mapping);
+
             this.GetScreen_Home().AbrirFormHija( this.GetScreen_Conv_2());
         }
         public void ConfirmChMapping(Dictionary<string, string> ch_translations)
@@ -436,11 +442,16 @@ namespace HFO_ENGINE{
                 //return (JsonObject)JsonValue.Parse(response.Content.ReadAsStringAsync().Result);
             }
         }
-
-        private static void UploadFileAsync(Tuple<WebClient, Uri, string> Params) {
-            Params.Item1.UploadFileAsync(Params.Item2, Params.Item3);
+        private void printDict(Dictionary<string, string> aDict)
+        {
+            Console.WriteLine("{");
+            foreach (KeyValuePair<string, string> kvp in aDict){
+                Console.WriteLine("       {0} : {1}", kvp.Key, kvp.Value);
+            }
+            Console.WriteLine("}");
         }
-    }
+    } 
+        
 
     class Model {
         //Constructor
@@ -539,8 +550,8 @@ namespace HFO_ENGINE{
         }
 
         //Colaborators
-        public Dictionary<String, String> ch_names_mapping { get; set; }
         public string edf_fname { get; set; }
+        public Dictionary<string,string> ch_names_mapping { get; set; }
 
     }
 
@@ -560,13 +571,9 @@ namespace HFO_ENGINE{
         HelpText = "Prints all messages to standard output.")]
         public bool Verbose { get; set; }
     }
-    class ChannelMappingSuggestion
+    class SuggestionResponse
     {
-        public ChannelMappingSuggestion(Dictionary<String, Dictionary<String, String>> _value)
-        {
-            value = _value;
-        }
-        public Dictionary<String, Dictionary<String, String>> value { get; set; }
+        public Dictionary<string, string> suggested_mapping { get; set; } //todo rename with mayus in the server
     }
     class TRCInfo
     {

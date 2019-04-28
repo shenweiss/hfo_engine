@@ -12,36 +12,44 @@ namespace HFO_ENGINE
 {
     public partial class Translation : Form
     {
-        private Dictionary<string, string> Translations;
+        private Dictionary<string, string> Translations { get; set; }
 
         public Translation(Dictionary<string, string> translations)
         {
             InitializeComponent();
-            Translations = translations;
+            this.Translations = translations;
             int number = 0;
+            
             foreach (var translation in Translations)
             {
-                number = number + 1; 
-                Panel translationPanel = new Panel();
-                translationPanel.Name = "translationPanel_" + number.ToString();
+                Console.WriteLine(number.ToString()); //DEBUG
 
                 TextBox LongName = new TextBox();
                 LongName.Name = "LongNameTextBox_" + number.ToString();
                 LongName.Size = LongNameTextBox.Size;
-                LongName.Location = new Point() { X = LongNameTextBox.Location.X, Y = LongNameTextBox.Location.Y };
                 LongName.Text = translation.Key;
                 LongName.Enabled = false;
 
                 TextBox ShortName = new TextBox();
                 ShortName.Name = "ShortNameTextBox_" + number.ToString();
                 ShortName.Size = ShortNameTextBox.Size;
-                ShortName.Location = new Point() { X = ShortNameTextBox.Location.X, Y = ShortNameTextBox.Location.Y };
                 ShortName.Text = translation.Value;
 
+                Panel translationPanel = new Panel();
+
+                translationPanel.Name = "translationPanel_" + number.ToString();
                 translationPanel.Controls.Add(LongName);
+                translationPanel.Controls[LongName.Name].Location = LongNameTextBox.Location;
+
                 translationPanel.Controls.Add(ShortName);
+                translationPanel.Controls[ShortName.Name].Location = ShortNameTextBox.Location;
+
                 PanelTranslations.Controls.Add(translationPanel);
+
+                number = number + 1;
             }
+            
+
         }
 
         private void Confirm_translations_btn_Click(object sender, EventArgs e)
