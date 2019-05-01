@@ -32,7 +32,7 @@ namespace HFO_ENGINE
             InitializeComponent();
             uploadProgressBar.DataBindings.Add("Value", this, "UploadProgress");
         }
-        public void SetTRCFile(string trc_fname) {
+        public void SetTrcFile(string trc_fname) {
             this.TrcPath_txtBx.Text = trc_fname;
         }
 
@@ -65,7 +65,7 @@ namespace HFO_ENGINE
         }
 
         private void EEG_save_btn_Click(object sender, EventArgs e){
-            Program.Controller.SetTRCFile( this.TrcPath_txtBx.Text);
+            Program.Controller.SetTrcFile(this.TrcPath_txtBx.Text);
         }
 
     }

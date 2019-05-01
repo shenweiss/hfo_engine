@@ -17,36 +17,34 @@ namespace HFO_ENGINE
         {
             InitializeComponent();
         }
+        public void SetEvtFile(string evt_fname)
+        {
+            this.EvtPath_txtBx.Text = Path.GetDirectoryName(evt_fname);
+            this.EvtPath_txtBx.Text = Path.GetFileNameWithoutExtension(evt_fname);
+        }
+
+        private void Browse_evt_dir_btn_Click(object sender, EventArgs e) {
+            var dialog = new FolderBrowserDialog();
+            dialog.ShowDialog();
+            EvtPath_txtBx.Text = dialog.SelectedPath;
+        }
+
+        private void Browse_evt_dir_btn_MouseLeave(object sender, EventArgs e)
+        {
+            Browse_evt_dir_btn.Size = new Size(50, 50);
+            Browse_evt_dir_btn.Location = new Point(150, 50);
+        }
+        private void Browse_evt_dir_btn_MouseEnter(object sender, EventArgs e)
+        {
+            Browse_evt_dir_btn.Size = new Size(60, 60);
+            Browse_evt_dir_btn.Location = new Point(145, 45);
+        }
 
         private void Evt_save_btn_Click(object sender, EventArgs e)
         {
-            Program.Controller.SetEvt(EvtPath_txtBx.Text);
-        }
+            string evt_fname = Path.GetFileNameWithoutExtension(Evt_fname_txtBox.Text) + ".evt";
+            Program.Controller.SetEvtFile(EvtPath_txtBx.Text, evt_fname);
 
-        private void exportEVTbtn_Click_1(object sender, EventArgs e) {
-            if (string.IsNullOrEmpty(Program.Controller.GetTRCFile()))
-                MessageBox.Show("Please select a TRC file prior to setting the evt saving path.");
-            else{
-                var dialog = new FolderBrowserDialog();
-                dialog.ShowDialog();
-                EvtPath_txtBx.Text = dialog.SelectedPath;
-            }
-          
-        }
-        private void exportEVTbtn_MouseLeave(object sender, EventArgs e)
-        {
-            exportEVTbtn.Size = new Size(50, 50);
-            exportEVTbtn.Location = new Point(150, 50);
-        }
-        private void exportEVTbtn_MouseEnter(object sender, EventArgs e)
-        {
-            exportEVTbtn.Size = new Size(60, 60);
-            exportEVTbtn.Location = new Point(145, 45);
-        }
-
-        public void SetEvtFile(string evt_fname)
-        {
-            this.EvtPath_txtBx.Text = evt_fname;
         }
 
     }

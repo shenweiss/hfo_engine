@@ -82,14 +82,14 @@ namespace HFO_ENGINE
         }
         private void BtnMontage_Click(object sender, EventArgs e)
         {
-            if (!Program.Controller.Is_TRC_metadata_setted()) {
+            if (!Program.Controller.IsMetadataSetted()) {
                 MessageBox.Show("Please first save the file to be used from the EEG menu.");
             }
             else AbrirFormHija( Program.Controller.GetScreen_Montage() );
         }
         private void BtnTimeWindow_Click(object sender, EventArgs e)
         {
-            if (!Program.Controller.Is_TRC_metadata_setted()){
+            if (!Program.Controller.IsMetadataSetted()){
                 MessageBox.Show("Please first save the file to be used from the EEG menu.");
             }
             else AbrirFormHija( Program.Controller.GetScreen_TimeWindow() );
@@ -104,11 +104,49 @@ namespace HFO_ENGINE
             AbrirFormHija( Program.Controller.GetScreen_Settings());
         }
         private void StartBtn_Click(object sender, EventArgs e) {
-            Program.Controller.StartHFOAnalizer();
+            if (Program.Controller.IsAnalizing()) AbrirFormHija(Program.Controller.GetScreen_AnalizerProgress());
+            else
+            {
+                AnalizerParams args = Program.Controller.GetAnalizerParams();
+
+                //Check that all params have been setted by the user
+                if (string.IsNullOrEmpty(args.TrcFile))
+                {
+                    MessageBox.Show("Please pick a TRC file to analize in the EEG menu.");
+                }
+                else if (string.IsNullOrEmpty(args.SuggestedMontage) || string.IsNullOrEmpty(args.BipolarMontage))
+                {
+                    MessageBox.Show("Please set the montages in Montage menu.");
+                }
+                else if (args.StopTime == 0) {
+                    MessageBox.Show("Please set your Time-window settings in Time-Window menu.");
+                }
+                else if (args.CycleTime == 0) {
+                    Program.Controller.SetCycleTime(false, 0); //tells the controller that we are not running in parallel if cycle_time wasn't setted
+                }
+                else if (string.IsNullOrEmpty(args.EvtFile))
+                {
+                    MessageBox.Show("Please set the evt saving path from the Output menu.");
+                }
+                else if (string.IsNullOrEmpty(Path.GetFileNameWithoutExtension(args.EvtFile))) //Cover default evt fname using trc fname
+                {
+                    string evt_dir = Path.GetDirectoryName(args.EvtFile);
+                    string evt_fname = Path.GetFileNameWithoutExtension(args.TrcFile) + ".evt";
+                }
+                else if (string.IsNullOrEmpty(Program.Controller.GetAPI().Hostname) ||
+                         string.IsNullOrEmpty(Program.Controller.GetAPI().Port))
+                {
+                    MessageBox.Show("Please set the API settings in Advanced settings menu.");
+                }
+                else
+                {
+                    Program.Controller.RunHFOAnalizer(); //From now on we know we are working with valid params.
+                }
+            }
         }
+
         private void Convert_btn_Click(object sender, EventArgs e)
         {
-            if (Program.Controller.GetScreen_Conv_1() == null) Program.Controller.InitConversions();
             AbrirFormHija(Program.Controller.GetScreen_Conv_1());
         }
 

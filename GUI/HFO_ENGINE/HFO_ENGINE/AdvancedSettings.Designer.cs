@@ -157,7 +157,7 @@
             this.test_btn.TabIndex = 32;
             this.test_btn.Text = "Test Server connection";
             this.test_btn.UseVisualStyleBackColor = true;
-            this.test_btn.Click += new System.EventHandler(this.test_btn_Click);
+            this.test_btn.Click += new System.EventHandler(this.Test_btn_Click);
             // 
             // label5
             // 

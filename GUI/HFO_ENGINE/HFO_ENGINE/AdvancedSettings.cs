@@ -31,7 +31,7 @@ namespace HFO_ENGINE
                                                    Logfile_txt.Text, TrcTemp_txt.Text);
         }
 
-        private void test_btn_Click(object sender, EventArgs e)
+        private void Test_btn_Click(object sender, EventArgs e)
         {
             Program.Controller.TestConnection();
         }

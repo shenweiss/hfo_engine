@@ -38,7 +38,10 @@ namespace HFO_ENGINE
         {
             int start_time = timer_to_seconds(start_time_picker);
             int stop_time = timer_to_seconds(stop_time_picker);
-            Program.Controller.SetTimeWindow(start_time, stop_time);
+            if (start_time < 0) MessageBox.Show("Input Error: Start time must be greater or equal to 0.");
+            else if (stop_time <= start_time) MessageBox.Show("Input Error: Stop time must be greater than Start time.");
+            else if (stop_time > Program.Controller.GetTrcDuration() ) MessageBox.Show("Input Error: Stop time is greater than TRC_duration.");
+            else Program.Controller.SetTimeWindow(start_time, stop_time);
         }
     }
 }
