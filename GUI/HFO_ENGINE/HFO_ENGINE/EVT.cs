@@ -20,13 +20,13 @@ namespace HFO_ENGINE
         public void SetEvtFile(string evt_fname)
         {
             this.EvtPath_txtBx.Text = Path.GetDirectoryName(evt_fname);
-            this.EvtPath_txtBx.Text = Path.GetFileNameWithoutExtension(evt_fname);
+            this.Evt_fname_txtBox.Text = Path.GetFileNameWithoutExtension(evt_fname);
         }
 
         private void Browse_evt_dir_btn_Click(object sender, EventArgs e) {
             var dialog = new FolderBrowserDialog();
             dialog.ShowDialog();
-            EvtPath_txtBx.Text = dialog.SelectedPath;
+            EvtPath_txtBx.Text = dialog.SelectedPath + "\\";
         }
 
         private void Browse_evt_dir_btn_MouseLeave(object sender, EventArgs e)

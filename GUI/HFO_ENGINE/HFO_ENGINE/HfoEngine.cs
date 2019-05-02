@@ -21,7 +21,6 @@ using System.ComponentModel;
 //TODO
 
 //Debug Conversor
-//meter un IsConverting
 //Debug analizer
 
 namespace HFO_ENGINE
@@ -89,7 +88,7 @@ namespace HFO_ENGINE
         //Analizer Logic
         public void SetTrcFile(string trc_fname)
         {
-            if (this.Model.IsAnalizing) this.UnavailableOptionMsg();
+            if (this.IsBusy()) this.UnavailableOptionMsg();
             else
             {
                 this.Model.AnalizerParams.TrcFile = trc_fname;
@@ -98,7 +97,7 @@ namespace HFO_ENGINE
         }
         public void SetMontages(string sug_montage, string bp_montage)
         {
-            if (this.Model.IsAnalizing) this.UnavailableOptionMsg();
+            if (this.IsBusy()) this.UnavailableOptionMsg();
             else
             {
                 this.Model.AnalizerParams.SuggestedMontage = sug_montage;
@@ -107,7 +106,7 @@ namespace HFO_ENGINE
         }
         public void SetTimeWindow(int start_time, int stop_time)
         {
-            if (this.Model.IsAnalizing) this.UnavailableOptionMsg();
+            if (this.IsBusy()) this.UnavailableOptionMsg();
             else
             {
                 this.Model.AnalizerParams.StartTime = start_time;
@@ -116,7 +115,7 @@ namespace HFO_ENGINE
         }
         public void SetCycleTime(bool parallel_flag, int cycle_time)
         {
-            if (this.Model.IsAnalizing) this.UnavailableOptionMsg();
+            if (this.IsBusy()) this.UnavailableOptionMsg();
             else
             {
                 if (parallel_flag) this.Model.AnalizerParams.CycleTime = cycle_time;
@@ -124,12 +123,12 @@ namespace HFO_ENGINE
             }
         }
         public void SetEvtFile(string evt_dir, string evt_fname){
-            if (this.Model.IsAnalizing) this.UnavailableOptionMsg();
+            if (this.IsBusy()) this.UnavailableOptionMsg();
             else this.Model.AnalizerParams.EvtFile = evt_dir + evt_fname;
         }
         public void SetAdvancedSettings(string hostname, string port, string log_file, string trc_temp_dir)
         {
-            if (this.Model.IsAnalizing) this.UnavailableOptionMsg();
+            if (this.IsBusy()) this.UnavailableOptionMsg();
             else {
                 this.Model.API.Hostname = hostname;
                 this.Model.API.Port = port;
@@ -137,7 +136,6 @@ namespace HFO_ENGINE
                 this.Model.TRCTempDir =  trc_temp_dir;
             }
         }
-
         private void UploadTrcFile_And_GetMetadata(string trc_fname)
         {
             File.Copy(trc_fname, this.GetTRCTempPath(trc_fname), true);
@@ -172,9 +170,9 @@ namespace HFO_ENGINE
             
         }
         public bool IsMetadataSetted() { return this.GetTrcDuration() != 0; }
-
         public void RunHFOAnalizer()
         {
+            //Requires: Params have been validated and IsBusy() == false
             this.Model.IsAnalizing = true;
             this.GetScreen_Home().AbrirFormHija(this.GetScreen_AnalizerProgress());
             this.GetScreen_AnalizerProgress().StartTimer();
@@ -236,28 +234,17 @@ namespace HFO_ENGINE
             {
                 client.DownloadFile(uri_get_evt, dest);
             }
-        }
+            MessageBox.Show("Evt was downloaded");
 
+        }
         public bool IsAnalizing() { return this.Model.IsAnalizing; }
 
         //Conversor Logic
         public void StartEdfConversion(string edf_fname)
         {
-            if (this.Model.IsAnalizing) this.UnavailableOptionMsg();
-            else {
-                this.Model.IsAnalizing = true;
-                //UploadEdf(edf_fname);
-                Dictionary<string, string> suggested_mapping = this.GetChMapping(edf_fname);
-                this.Model.ConversionParams = new ConversionParams(Path.GetFileName(edf_fname),
-                                                                   suggested_mapping);
-                //Go to confirm translations screen
-                this.Model.ConvScreen_2 = new ConversorStep2(suggested_mapping);
-                this.GetScreen_Home().AbrirFormHija(this.GetScreen_Conv_2());
-            }
-            
-        }
-        private void UploadEdf(string edf_fname)
-        {
+            //Requires: Params have been validated and IsBusy() == false
+            this.Model.IsConverting = true;
+
             string uri_upload = this.GetAPI().URI() + "upload";
             WebClient webClient = new WebClient();
             void WebClientUploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
@@ -269,6 +256,12 @@ namespace HFO_ENGINE
             {
                 MessageBox.Show("Edf upload is complete. ");
                 this.GetScreen_Conv_1().UploadProgress = 0;
+                Dictionary<string, string> suggested_mapping = this.GetChMapping(edf_fname);
+                this.Model.ConversionParams = new ConversionParams(Path.GetFileName(edf_fname),
+                                                                    suggested_mapping);
+                //Go to confirm translations screen
+                this.Model.ConvScreen_2 = new ConversorStep2(suggested_mapping);
+                this.GetScreen_Home().AbrirFormHija(this.GetScreen_Conv_2());
             }
             webClient.UploadProgressChanged += WebClientUploadProgressChanged;
             webClient.UploadFileCompleted += WebClientUploadCompleted;
@@ -290,15 +283,17 @@ namespace HFO_ENGINE
         }
         public void ConvertEdf(string trc_saving_dir)
         {
-            string uri_edf_to_trc = this.GetAPI().URI() + "edf_to_trc/";
-            string serialized_conv_params = new JavaScriptSerializer().Serialize(this.GetConvParams()); // revisrar
+            string uri_edf_to_trc = this.GetAPI().URI() + "edf_to_trc";
+            string serialized_conv_params = new JavaScriptSerializer().Serialize(this.GetConvParams()); 
             string run_response_str = this.PostJsonSync(uri_edf_to_trc, serialized_conv_params);
             JsonObject run_response = (JsonObject)JsonValue.Parse(run_response_str);
+
             if (run_response.ContainsKey("error_msg")) MessageBox.Show(run_response["error_msg"]);
             else
             {
                 string pid = run_response["task_id"];
                 string uri_task_state = this.GetAPI().URI() + "task_state/" + pid;
+                this.GetScreen_Conv_3().Progress = 10;
                 int progress = 0;
                 do
                 {
@@ -306,7 +301,6 @@ namespace HFO_ENGINE
                     JsonObject task_state = (JsonObject)JsonValue.Parse(task_state_string);
                     if (!task_state.ContainsKey("progress")) { MessageBox.Show(task_state["error_msg"]); return; }
                     else progress = task_state["progress"];
-                    MessageBox.Show(progress.ToString());
                     this.GetScreen_Conv_3().Progress = progress;
                     Thread.Sleep(1000);
                 } while (progress < 100);
@@ -314,8 +308,10 @@ namespace HFO_ENGINE
                 string basename = Path.GetFileNameWithoutExtension(GetConvParams().edf_fname);
                 string remote_trc_fname = basename + ".TRC";
                 string trc_saving_path = trc_saving_dir + remote_trc_fname;
-
-                this.DownloadTRC(remote_trc_fname, trc_saving_path); 
+                MessageBox.Show("Conversion completed, downloading TRC from remote server...");
+                this.DownloadTRC(remote_trc_fname, trc_saving_path);
+                this.Model.IsConverting = false;
+                this.Log("Conversion finished.");
             }
         }
         public void DownloadTRC(string remote_trc_fname, string trc_saving_path)
@@ -337,6 +333,7 @@ namespace HFO_ENGINE
             string uri_download_trc = this.GetAPI().URI() + "download/TRCs/" + remote_trc_fname;
             webClient.DownloadFileAsync(new Uri(uri_download_trc), trc_saving_path);
         }
+        public bool IsConverting() { return this.Model.IsConverting; }
 
         //General Program Logic
         public void TestConnection()
@@ -368,6 +365,7 @@ namespace HFO_ENGINE
         {
             MessageBox.Show("This option is unavailable at this moment. Please try again later.");
         }
+        public bool IsBusy() { return IsConverting() || IsAnalizing(); }
 
         //Extras
         private async Task<JsonObject> GetJsonAsync(string uri)
@@ -427,6 +425,7 @@ namespace HFO_ENGINE
 
             this.TrcDuration = 0;
             this.IsAnalizing = false;
+            this.IsConverting = false;
             this.LogFile = Program.MainDir() + "logs/ez_detect_gui_log.txt";
             this.TRCTempDir = Program.MainDir() + "temp/";
 
@@ -471,6 +470,7 @@ namespace HFO_ENGINE
         public ConversorStep3 ConvScreen_3 { get; set; }
 
         public bool IsAnalizing { get; set; }
+        public bool IsConverting { get; set; }
     }
 
     class API {

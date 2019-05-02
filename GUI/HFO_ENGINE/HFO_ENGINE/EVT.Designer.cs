@@ -123,7 +123,7 @@
             this.Evt_fname_txtBox.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
             this.Evt_fname_txtBox.Size = new System.Drawing.Size(350, 17);
             this.Evt_fname_txtBox.TabIndex = 16;
-            this.Evt_fname_txtBox.Text = "evt_fname_example";
+            this.Evt_fname_txtBox.Text = "nameExample";
             // 
             // label1
             // 

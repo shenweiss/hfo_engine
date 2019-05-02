@@ -103,10 +103,12 @@ namespace HFO_ENGINE
         private void BtnAdvancedSettings_Click(object sender, EventArgs e) {
             AbrirFormHija( Program.Controller.GetScreen_Settings());
         }
+
         private void StartBtn_Click(object sender, EventArgs e) {
             if (Program.Controller.IsAnalizing()) AbrirFormHija(Program.Controller.GetScreen_AnalizerProgress());
+            else if (Program.Controller.IsConverting()) MessageBox.Show("Please complete the conversion prior to analizing.");
             else
-            {
+               {
                 AnalizerParams args = Program.Controller.GetAnalizerParams();
 
                 //Check that all params have been setted by the user
@@ -144,10 +146,10 @@ namespace HFO_ENGINE
                 }
             }
         }
-
         private void Convert_btn_Click(object sender, EventArgs e)
         {
-            AbrirFormHija(Program.Controller.GetScreen_Conv_1());
+            if (Program.Controller.IsBusy()) MessageBox.Show("There is already a conversion or analizing task running, please try later.");
+            else AbrirFormHija(Program.Controller.GetScreen_Conv_1());
         }
 
     }
