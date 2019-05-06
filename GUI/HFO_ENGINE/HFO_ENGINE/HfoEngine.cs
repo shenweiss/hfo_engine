@@ -119,7 +119,7 @@ namespace HFO_ENGINE
             else
             {
                 if (parallel_flag) this.Model.AnalizerParams.CycleTime = cycle_time;
-                else this.Model.AnalizerParams.CycleTime = GetAnalizerParams().StopTime - GetAnalizerParams().StartTime + 1;
+                else this.Model.AnalizerParams.CycleTime = GetAnalizerParams().StopTime - GetAnalizerParams().StartTime;
             }
         }
         public void SetEvtFile(string evt_dir, string evt_fname){
@@ -139,6 +139,7 @@ namespace HFO_ENGINE
         private void UploadTrcFile_And_GetMetadata(string trc_fname)
         {
             File.Copy(trc_fname, this.GetTRCTempPath(trc_fname), true);
+            /*
 
             string uri_upload = this.GetAPI().URI() + "upload";
             WebClient webClient = new WebClient();
@@ -156,7 +157,8 @@ namespace HFO_ENGINE
             }
             webClient.UploadProgressChanged += WebClientUploadProgressChanged;
             webClient.UploadFileCompleted += WebClientUploadCompleted;
-            webClient.UploadFileAsync(new Uri(uri_upload), this.GetTRCTempPath(trc_fname));
+            webClient.UploadFileAsync(new Uri(uri_upload), this.GetTRCTempPath(trc_fname));*/
+            Program.Controller.SetTrcMetadata(trc_fname); // delete
         }
         private void SetTrcMetadata(string trc_fname)
         {
@@ -176,25 +178,30 @@ namespace HFO_ENGINE
             this.Model.IsAnalizing = true;
             this.GetScreen_Home().AbrirFormHija(this.GetScreen_AnalizerProgress());
             this.GetScreen_AnalizerProgress().StartTimer();
-            this.GetScreen_AnalizerProgress().BgWorker.DoWork += (s, f) =>{
-                this.AnalizeWith( GetAnalizerParams());
-                this.GetScreen_AnalizerProgress().SaveAndReset_timer();
-                this.Log("Getting evt from remote server...");
-                this.DownloadEvt(Path.GetFileName(GetAnalizerParams().TrcFile), //The remote EvtFile name to be fetched
-                                                  GetAnalizerParams().EvtFile); //Where to save it
-                this.Model.IsAnalizing = false;
-                this.Log("Analisis finished.");
-            };
-            this.GetScreen_AnalizerProgress().BgWorker.RunWorkerAsync();
+
+
+            this.AnalizeWith(this.GetAnalizerParams());
+            this.GetScreen_AnalizerProgress().SaveAndReset_timer();
+            this.Log("Getting evt from remote server...");
+            this.DownloadEvt(Path.GetFileName(GetAnalizerParams().TrcFile), //The remote EvtFile name to be fetched
+                                              GetAnalizerParams().EvtFile); //Where to save it
+            this.Model.IsAnalizing = false;
+            this.Log("Analisis finished.");
+            /*this.GetScreen_AnalizerProgress().BgWorker.DoWork += (s, f) =>{
+                
+            };*/
+            //this.GetScreen_AnalizerProgress().BgWorker.RunWorkerAsync();
         }
         private void AnalizeWith(AnalizerParams args)
         {
-            this.GetScreen_AnalizerProgress().UpdateProgress(1);
+            MessageBox.Show("Entering AnalizeWith");
+            this.GetScreen_AnalizerProgress().WorkerState = 10;
+            MessageBox.Show("Passed in AnalizeWith");
 
             this.Log("Input trc_path: " + args.TrcFile);
             this.Log("Output xml_path: " + args.EvtFile);
 
-            string uri_run = this.GetAPI() + "run";
+            string uri_run = this.GetAPI().URI() + "run";
             Dictionary<string, string> Params = new Dictionary<string, string>();
             Params.Add("trc_fname", Path.GetFileName(args.TrcFile));
             Params.Add("str_time", args.StartTime.ToString());
@@ -203,8 +210,10 @@ namespace HFO_ENGINE
             Params.Add("sug_montage", args.SuggestedMontage);
             Params.Add("bp_montage", args.BipolarMontage);
             string serialized_params = JsonConvert.SerializeObject(Params, new KeyValuePairConverter());
-
+            MessageBox.Show(serialized_params); //Debug
             string run_response_str = this.PostJsonSync(uri_run, serialized_params);
+            MessageBox.Show(run_response_str); //Debug
+
             JsonObject run_response = (JsonObject)JsonValue.Parse(run_response_str);
 
             if (run_response.ContainsKey("error_msg")) MessageBox.Show(run_response["error_msg"]);
@@ -218,6 +227,8 @@ namespace HFO_ENGINE
                 do
                 {
                     string task_state_string = this.GetJsonSync(uri_task_state);
+                    MessageBox.Show("DEBUG cycle: " + task_state_string); //Debug
+
                     JsonObject task_state = (JsonObject)JsonValue.Parse(task_state_string);
                     if (!task_state.ContainsKey("progress")) { MessageBox.Show(task_state["error_msg"]); break; }
                     else progress = task_state["progress"];
@@ -368,7 +379,7 @@ namespace HFO_ENGINE
         public bool IsBusy() { return IsConverting() || IsAnalizing(); }
 
         //Extras
-        private async Task<JsonObject> GetJsonAsync(string uri)
+        /*private async Task<JsonObject> GetJsonAsync(string uri)
         {
             HttpClient httpClient = new HttpClient();
             string content = await httpClient.GetStringAsync(uri);
@@ -382,12 +393,11 @@ namespace HFO_ENGINE
                 HttpResponseMessage response = await httpClient.PostAsync(uri, body);
                 return (JsonObject)JsonValue.Parse(await response.Content.ReadAsStringAsync());
             }
-        }
+        }*/
         private string GetJsonSync(string uri)
         {
             HttpClient httpClient = new HttpClient();
             return httpClient.GetStringAsync(uri).Result;
-            //return (JsonObject)JsonValue.Parse(content);
         }
         private string PostJsonSync(string uri, string serialized_json)
         {
@@ -396,7 +406,6 @@ namespace HFO_ENGINE
                 StringContent body = new StringContent(serialized_json, Encoding.UTF8, "application/json");
                 HttpResponseMessage response = httpClient.PostAsync(uri, body).Result;
                 return response.Content.ReadAsStringAsync().Result;
-                //return (JsonObject)JsonValue.Parse(response.Content.ReadAsStringAsync().Result);
             }
         }
         private void Log(string info)
@@ -406,14 +415,14 @@ namespace HFO_ENGINE
                 file.WriteLine(info);
             }
         }
-        private void PrintDict(Dictionary<string, string> aDict)
+        /*private void PrintDict(Dictionary<string, string> aDict)
         {
             Console.WriteLine("{");
             foreach (KeyValuePair<string, string> kvp in aDict){
                 Console.WriteLine("       {0} : {1}", kvp.Key, kvp.Value);
             }
             Console.WriteLine("}");
-        }
+        }*/
     } 
 
     class Model {

@@ -1,3 +1,0 @@
-Input trc_path: C:/TRCs/test.TRC
-Output xml_path: C:\Users\Tomas Pastore\Desktop\VS
-Conversion finished.

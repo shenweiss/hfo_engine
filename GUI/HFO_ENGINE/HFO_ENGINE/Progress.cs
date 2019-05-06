@@ -35,7 +35,7 @@ namespace HFO_ENGINE
                     PropertyChanged(this, new PropertyChangedEventArgs("WorkerState"));
             }
         }
-        public void UpdateProgress(int progressState) { this.WorkerState = progressState; }
+        public void UpdateProgress(int progressState) { WorkerState = progressState; }
         private int snds_count { get; set; }
 
         //Methods
