@@ -9,6 +9,7 @@ from hfo_engine_web.db import get_db
 import mne
 from trcio import read_raw_trc, write_raw_trc
 from ez_detect import config, hfo_annotate
+from ez_detect.config import ProgressNotifier
 
 from multiprocessing import Process, Value
 import ctypes
@@ -94,8 +95,8 @@ def run_hfo_engine():
         return jsonify(validated), status_code 
 
     pid = str(uuid.uuid4())
-    current_app.config['task_state'][pid] = TaskState( progress = AtomicCounter(init_value=0, min_value=0, max_value=100),
-                                                       error_msg = Value(ctypes.c_char_p, "None".encode('utf-8')),
+    current_app.config['task_state'][pid] = TaskState( progress = ProgressNotifier(),
+                                                       error_msg = Value(ctypes.c_char_p, "".encode('utf-8')),
                                                        status_code = Value('i', OK))
 
     p = Process(target=hfo_annotate_task, args=(validated['abs_trc_fname'],
@@ -136,10 +137,8 @@ def edf_to_trc():
     
     pid = str(uuid.uuid4())
     current_app.config['task_state'][pid] = TaskState( 
-                                                       progress = AtomicCounter(init_value=0, 
-                                                                                min_value=0, 
-                                                                                max_value=100),
-                                                       error_msg = Value(ctypes.c_char_p, "None".encode('utf-8')),
+                                                       progress = ProgressNotifier(),
+                                                       error_msg = Value(ctypes.c_char_p, "".encode('utf-8')),
                                                        status_code = Value('i', OK)
                                                      )
 
@@ -344,20 +343,19 @@ def duration_snds(raw_trc):
 
 
 def hfo_annotate_task(abs_trc_fname, abs_evt_fname, str_time, stp_time, cycle_time, 
-                      sug_montage, bp_montage, state_notifier, jobs_count):
-    state_notifier.progress.update(0)
-    state_notifier.error_msg.value = "testing".encode('utf-8') 
+                      sug_montage, bp_montage, task_state, jobs_count):
+    task_state.error_msg.value = "testing".encode('utf-8') 
 
     paths = config.getAllPaths(abs_trc_fname, 
                                abs_evt_fname)
     config.clean_previous_execution()
     try:
-        hfo_annotate(paths, str_time, stp_time, cycle_time, sug_montage, bp_montage, 
-                     progress_notifier=state_notifier.progress) 
-        state_notifier.progress.update(100) 
-        state_notifier.status_code.value = CREATED
+        hfo_annotate(paths, str_time, stp_time, cycle_time, 
+                     sug_montage, bp_montage, progress_notifier=task_state.progress) 
+        task_state.status_code.value = CREATED
     except Exception as e:
-        state_notifier.error_msg.value = "Internal error".encode('utf-8') #no anda bien el encoding
+        task_state.error_msg.value = "Internal error in analizer".encode('utf-8') #no anda bien el encoding
+        task_state.status_code.value = SERVER_ERROR
     finally: 
         jobs_count.decrement()
 
@@ -382,38 +380,42 @@ def suggested_trc_ch_names(edf_fname):
         translation[ch_name] = suggested_translation(ch_name, known_translation)
     return translation
 
-def edf_to_trc_task(edf_path, ch_names_translation, saving_directory, validator, state_notifier):
-    state_notifier.progress.update(0)
-    
-    raw_edf = mne.io.read_raw_edf( str(edf_path), preload=True)
-    raw_edf.pick_types(eeg=True, stim=False)
-    state_notifier.progress.update(20)
+def edf_to_trc_task(edf_path, ch_names_translation, saving_directory, validator, task_state):
+    try:
+        task_state.progress.update(5)
+        raw_edf = mne.io.read_raw_edf( str(edf_path), preload=True)
+        task_state.progress.update(10)
+        raw_edf.pick_types(eeg=True, stim=False)
+        validator.validateEDFToTRC_Step2(ch_names_translation, raw_edf.ch_names, task_state)
+        task_state.progress.update(20)
 
-    validator.validateEDFToTRC_Step2(ch_names_translation, raw_edf.ch_names, state_notifier)
-    state_notifier.progress.update(30)
+        # If data comes in microvolts, this information is stored 
+        # in the info dict in the unit_mul entry as -6. If it is volt, then it is stored as 1.
+        #info['chs'][0]['unit'] info['chs'][0]['unit_mul']
+        #to_rename = {x: x.split(' ')[1].split('-')[0] for x in raw_edf.ch_names}
+        raw_edf._data *= 1e-06 #From microvolts to volts
+        task_state.progress.update(30)
 
-    # If data comes in microvolts, this information is stored 
-    # in the info dict in the unit_mul entry as -6. If it is volt, then it is stored as 1.
-    #info['chs'][0]['unit'] info['chs'][0]['unit_mul']
-    #to_rename = {x: x.split(' ')[1].split('-')[0] for x in raw_edf.ch_names}
-    raw_edf._data *= 1e-06 #From microvolts to volts
+        to_rename = {long:short for long,short in ch_names_translation.items() if long != short}
+        raw_edf.rename_channels(to_rename)
+        task_state.progress.update(40)
 
-    to_rename = {long:short for long,short in ch_names_translation.items() if long != short}
-    raw_edf.rename_channels(to_rename)
-    state_notifier.progress.update(40)
+        db = get_db()
+        for long, short in to_rename.items():
+            db.execute(
+                        'REPLACE INTO ch_name_translation'
+                        ' VALUES (?,?)', 
+                        (long, short)
+                      )
+        db.commit()
+        task_state.progress.update(50)
+        trc_fname = edf_path.stem + '.TRC'
+        abs_trc_fname = os.path.join(saving_directory, trc_fname)
+        write_raw_trc(raw_edf, abs_trc_fname)
 
-    db = get_db()
-    for long, short in to_rename.items():
-        db.execute(
-                    'REPLACE INTO ch_name_translation'
-                    ' VALUES (?,?)', 
-                    (long, short)
-                  )
-    db.commit()
-    state_notifier.progress.update(50)
-    trc_fname = edf_path.stem + '.TRC'
-    abs_trc_fname = os.path.join(saving_directory, trc_fname)
-    write_raw_trc(raw_edf, abs_trc_fname)
+        task_state.progress.update(100)
+        task_state.status_code.value = CREATED
 
-    state_notifier.progress.update(100)
-    state_notifier.status_code.value = CREATED
+    except Exception as e:
+        task_state.error_msg.value = "Internal error in conversion".encode('utf-8') #no anda bien el encoding
+        task_state.status_code.value = SERVER_ERROR
