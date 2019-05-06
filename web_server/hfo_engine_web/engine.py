@@ -95,7 +95,7 @@ def run_hfo_engine():
 
     pid = str(uuid.uuid4())
     current_app.config['task_state'][pid] = TaskState( progress = AtomicCounter(init_value=0, min_value=0, max_value=100),
-                                                       error_msg = Value(ctypes.c_char_p, "None".encode('utf-8')),
+                                                       error_msg = Value(ctypes.c_char_p, "".encode('utf-8')),
                                                        status_code = Value('i', OK))
 
     p = Process(target=hfo_annotate_task, args=(validated['abs_trc_fname'],
@@ -139,7 +139,7 @@ def edf_to_trc():
                                                        progress = AtomicCounter(init_value=0, 
                                                                                 min_value=0, 
                                                                                 max_value=100),
-                                                       error_msg = Value(ctypes.c_char_p, "None".encode('utf-8')),
+                                                       error_msg = Value(ctypes.c_char_p, "".encode('utf-8')),
                                                        status_code = Value('i', OK)
                                                      )
 
@@ -346,7 +346,7 @@ def duration_snds(raw_trc):
 def hfo_annotate_task(abs_trc_fname, abs_evt_fname, str_time, stp_time, cycle_time, 
                       sug_montage, bp_montage, state_notifier, jobs_count):
     state_notifier.progress.update(0)
-    state_notifier.error_msg.value = "testing".encode('utf-8') 
+    #state_notifier.error_msg.value = "testing".encode('utf-8') 
 
     paths = config.getAllPaths(abs_trc_fname, 
                                abs_evt_fname)
@@ -417,3 +417,10 @@ def edf_to_trc_task(edf_path, ch_names_translation, saving_directory, validator,
 
     state_notifier.progress.update(100)
     state_notifier.status_code.value = CREATED
+
+if __name__ == "__main__":
+    progress = AtomicCounter(init_value=0, min_value=0, max_value=100)
+    paths = config.getAllPaths("/home/tpastore/hfo_engine/web_server/instance/TRCs/test.TRC", 
+                               "/home/tpastore/hfo_engine/web_server/instance/evts/testAnalizer.evt")
+    config.clean_previous_execution()
+    hfo_annotate(paths, 0, 600, 600, "Suggested", "Bipolar", progress_notifier=progress) 
