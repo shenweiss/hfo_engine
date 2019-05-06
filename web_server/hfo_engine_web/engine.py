@@ -344,7 +344,8 @@ def duration_snds(raw_trc):
 
 def hfo_annotate_task(abs_trc_fname, abs_evt_fname, str_time, stp_time, cycle_time, 
                       sug_montage, bp_montage, task_state, jobs_count):
-    task_state.error_msg.value = "testing".encode('utf-8') 
+    state_notifier.progress.update(0)
+    #state_notifier.error_msg.value = "testing".encode('utf-8') 
 
     paths = config.getAllPaths(abs_trc_fname, 
                                abs_evt_fname)
@@ -419,3 +420,10 @@ def edf_to_trc_task(edf_path, ch_names_translation, saving_directory, validator,
     except Exception as e:
         task_state.error_msg.value = "Internal error in conversion".encode('utf-8') #no anda bien el encoding
         task_state.status_code.value = SERVER_ERROR
+    
+
+if __name__ == "__main__":
+    paths = config.getAllPaths("/home/tpastore/hfo_engine/web_server/instance/TRCs/test.TRC", 
+                               "/home/tpastore/hfo_engine/web_server/instance/evts/testAnalizer.evt")
+    config.clean_previous_execution()
+    hfo_annotate(paths, 0, 600, 600, "Suggested", "Bipolar", progress_notifier=ProgressNotifier()) 
