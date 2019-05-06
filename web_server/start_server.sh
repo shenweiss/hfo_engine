@@ -2,7 +2,7 @@
 where=$1
 init_db=$2
 
-source venv/bin/activate
+#source venv/bin/activate
 
 export FLASK_APP=hfo_engine_web
 
@@ -11,7 +11,7 @@ then
 	flask init-db
 fi
 
-IP=$(ip -4 addr show wlo1 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+IP=$(ip -4 addr show eno1 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 echo 'IP >' $IP 
 
 if [ $where == "--production" ]

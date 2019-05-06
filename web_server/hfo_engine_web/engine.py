@@ -223,61 +223,61 @@ class Validator:
 
         return {'validated_fname': secure_filename(file.filename)}
 
- 	#Analizer
+    #Analizer
 
     def validateRun(self, request, trc_directory):
     
-	    #Check resources availability
-	    try:
-	        current_app.config['JOBS_COUNT'].increment()
-	    except AssertionError:
-	        return {'error_msg':'The server has reached the maximum active jobs. Try again later.', 
-	                'status_code':CONFLICT}
+        #Check resources availability
+        try:
+            current_app.config['JOBS_COUNT'].increment()
+        except AssertionError:
+            return {'error_msg':'The server has reached the maximum active jobs. Try again later.', 
+                    'status_code':CONFLICT}
 
         content = request.get_json(silent=True)
 
-	    #check file exists
-	    abs_trc_fname = os.path.join(trc_directory, content['trc_fname'])
-	    try:
-	        abs_trc_fname = str(Path(abs_trc_fname).resolve())
-	    except FileNotFoundError:
-	        return {'error_msg' : 'You must upload the TRC prior to running hfo_engine on it.', 
-	                'status_code' : NOT_FOUND}
+        #check file exists
+        abs_trc_fname = os.path.join(trc_directory, content['trc_fname'])
+        try:
+            abs_trc_fname = str(Path(abs_trc_fname).resolve())
+        except FileNotFoundError:
+            return {'error_msg' : 'You must upload the TRC prior to running hfo_engine on it.', 
+                    'status_code' : NOT_FOUND}
 
-	    raw_trc = read_raw_trc(abs_trc_fname, preload=False)
+        raw_trc = read_raw_trc(abs_trc_fname, preload=False)
         str_time = int(content['str_time'])
         stp_time = int(content['stp_time'])
-	    
+        
         if str_time < 0 or stp_time < str_time:
-	        return {'error_msg':"Start time is incorrect for the current trc.", 
-	                'status_code':CONFLICT}
-	    elif stp_time > duration_snds(raw_trc):
-	        return {'error_msg':"Stop time is greater than current trc duration.", 
-	                'status_code' : CONFLICT}
-	    elif content['sug_montage'] not in montage_names(raw_trc):
-	        return {'error_msg':"Suggested montage is not an option for current TRC file.", 
-	                'status_code' : CONFLICT}
-	    elif content['bp_montage'] not in montage_names(raw_trc):
-	        return {'error_msg':"Bipolar montage is not an option for current TRC file.",
-	                'status_code' : CONFLICT}
-	   
-	    evt_fname = Path(content['trc_fname']).stem + '.evt'
-	    abs_evt_fname = os.path.join(current_app.config['EVT_FOLDER'], evt_fname)
+            return {'error_msg':"Start time is incorrect for the current trc.", 
+                    'status_code':CONFLICT}
+        elif stp_time > duration_snds(raw_trc):
+            return {'error_msg':"Stop time is greater than current trc duration.", 
+                    'status_code' : CONFLICT}
+        elif content['sug_montage'] not in montage_names(raw_trc):
+            return {'error_msg':"Suggested montage is not an option for current TRC file.", 
+                    'status_code' : CONFLICT}
+        elif content['bp_montage'] not in montage_names(raw_trc):
+            return {'error_msg':"Bipolar montage is not an option for current TRC file.",
+                    'status_code' : CONFLICT}
+       
+        evt_fname = Path(content['trc_fname']).stem + '.evt'
+        abs_evt_fname = os.path.join(current_app.config['EVT_FOLDER'], evt_fname)
 
-	    return {
-	            'abs_trc_fname': abs_trc_fname, 
-	            'abs_evt_fname' : abs_evt_fname, 
-	            'str_time'      : str_time,
-	            'stp_time'      : stp_time,
-	            'cycle_time'    : int(content['cycle_time']), 
-	            'sug_montage'   : content['sug_montage'], 
-	            'bp_montage'    : content['bp_montage']
-	           }
+        return {
+                'abs_trc_fname': abs_trc_fname, 
+                'abs_evt_fname' : abs_evt_fname, 
+                'str_time'      : str_time,
+                'stp_time'      : stp_time,
+                'cycle_time'    : int(content['cycle_time']), 
+                'sug_montage'   : content['sug_montage'], 
+                'bp_montage'    : content['bp_montage']
+               }
 
-  	def validateEvtDownload(self, filename):
+    def validateEvtDownload(self, filename):
         return secure_filename(filename)
 
-	#Conversor
+    #Conversor
 
     def validateEDFToTRC_Step1(self, request, directory ):
 
@@ -316,7 +316,7 @@ class Validator:
                                                   " equal to {}.".format(TRC_MAX_CH_NAME_LEN)) 
                 state_notifier.status_code =CONFLICT
 
-   	def validateTRCDownload(self, filename):
+    def validateTRCDownload(self, filename):
         return secure_filename(filename)
     
 
@@ -367,10 +367,10 @@ def hfo_annotate_task(abs_trc_fname, abs_evt_fname, str_time, stp_time, cycle_ti
 def suggested_trc_ch_names(edf_fname):
     
     def suggested_translation(ch_name, known_translation):
-	    if ch_name in known_translation.keys():
-	        return known_translation[ch_name]
-	    else:
-	        return ch_name[-5:]
+        if ch_name in known_translation.keys():
+            return known_translation[ch_name]
+        else:
+            return ch_name[-5:]
 
     raw_edf = mne.io.read_raw_edf(edf_fname, preload=True)
     raw_edf.pick_types(eeg=True, stim=False)
