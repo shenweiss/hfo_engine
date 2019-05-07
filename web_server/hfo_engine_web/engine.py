@@ -294,26 +294,26 @@ class Validator:
                 'ch_names_mapping': content['ch_names_mapping']
                 }
     
-    def validateEDFToTRC_Step2(self, ch_names_translation, edf_ch_names, state_notifier):
+    def validateEDFToTRC_Step2(self, ch_names_translation, edf_ch_names, task_state):
         #Check the ch_name list is valid
         if set(ch_names_translation.keys()) != set(edf_ch_names):
-            state_notifier.error_msg.value =("The provided ch_names_mapping must have a definition" 
+            task_state.error_msg.value =("The provided ch_names_mapping must have a definition" 
                                              " for (and only for) every channel name in the edf.") 
-            state_notifier.status_code = CONFLICT
+            task_state.status_code = CONFLICT
 
         #Check the final ch_name list is valid
         #All diferent 
         if len(set(ch_names_translation.values())) != len(list(ch_names_translation.values())): 
-            state_notifier.error_msg.value ="The final ch_name list has repetead values."
-            state_notifier.status_code = CONFLICT
+            task_state.error_msg.value ="The final ch_name list has repetead values."
+            task_state.status_code = CONFLICT
         
         #Length is correct
         TRC_MAX_CH_NAME_LEN = 5
         for long_name, short_name in ch_names_translation.items():
             if len(short_name) > TRC_MAX_CH_NAME_LEN:
-                state_notifier.error_msg.value = ("TRC channel names length must be less or"
+                task_state.error_msg.value = ("TRC channel names length must be less or"
                                                   " equal to {}.".format(TRC_MAX_CH_NAME_LEN)) 
-                state_notifier.status_code =CONFLICT
+                task_state.status_code =CONFLICT
 
     def validateTRCDownload(self, filename):
         return secure_filename(filename)
@@ -344,8 +344,8 @@ def duration_snds(raw_trc):
 
 def hfo_annotate_task(abs_trc_fname, abs_evt_fname, str_time, stp_time, cycle_time, 
                       sug_montage, bp_montage, task_state, jobs_count):
-    state_notifier.progress.update(0)
-    #state_notifier.error_msg.value = "testing".encode('utf-8') 
+    task_state.progress.update(0)
+    #task_state.error_msg.value = "testing".encode('utf-8') 
 
     paths = config.getAllPaths(abs_trc_fname, 
                                abs_evt_fname)
@@ -423,6 +423,7 @@ def edf_to_trc_task(edf_path, ch_names_translation, saving_directory, validator,
     
 
 if __name__ == "__main__":
+    #Test
     paths = config.getAllPaths("/home/tpastore/hfo_engine/web_server/instance/TRCs/test.TRC", 
                                "/home/tpastore/hfo_engine/web_server/instance/evts/testAnalizer.evt")
     config.clean_previous_execution()
