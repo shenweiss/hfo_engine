@@ -356,10 +356,13 @@ def hfo_annotate_task(abs_trc_fname, abs_evt_fname, str_time, stp_time, cycle_ti
     try:
         hfo_annotate(paths, str_time, stp_time, cycle_time, 
                      sug_montage, bp_montage, progress_notifier=task_state.progress) 
-        task_state.status_code.value = CREATED
+        with task_state.status_code.get_lock():
+            task_state.status_code.value = CREATED
     except Exception as e:
-        task_state.error_msg.value = e.message.encode('utf-8') #no anda bien el encoding
-        task_state.status_code.value = SERVER_ERROR
+        with task_state.error_msg.get_lock():
+            task_state.error_msg.value = e.message.encode('utf-8') #no anda bien el encoding
+        with task_state.status_code.get_lock():
+            task_state.status_code.value = SERVER_ERROR
     finally: 
         jobs_count.decrement()
 
