@@ -63,12 +63,15 @@ def task_state(pid):
         progress = current_app.config['task_state'][pid].progress.get()
         error_msg= current_app.config['task_state'][pid].error_msg.value
         status_code = current_app.config['task_state'][pid].status_code.value
-        if progress >= 100:
-            del current_app.config['task_state'][pid]
 
+        is_finished = status_code != OK or progress >= 100
+        
+        if is_finished:
+            del current_app.config['task_state'][pid]
+        
         return (jsonify(progress = progress, 
                         error_msg= error_msg.decode('utf-8')),
-                status_code)
+                        status_code)
 
     else:   
         return (jsonify(error_msg="There is not an active job with that id."), 
@@ -355,7 +358,7 @@ def hfo_annotate_task(abs_trc_fname, abs_evt_fname, str_time, stp_time, cycle_ti
                      sug_montage, bp_montage, progress_notifier=task_state.progress) 
         task_state.status_code.value = CREATED
     except Exception as e:
-        task_state.error_msg.value = "Internal error in analizer".encode('utf-8') #no anda bien el encoding
+        task_state.error_msg.value = e.message.encode('utf-8') #no anda bien el encoding
         task_state.status_code.value = SERVER_ERROR
     finally: 
         jobs_count.decrement()
@@ -418,7 +421,7 @@ def edf_to_trc_task(edf_path, ch_names_translation, saving_directory, validator,
         task_state.status_code.value = CREATED
 
     except Exception as e:
-        task_state.error_msg.value = "Internal error in conversion".encode('utf-8') #no anda bien el encoding
+        task_state.error_msg.value = e.message.encode('utf-8') #no anda bien el encoding
         task_state.status_code.value = SERVER_ERROR
     
 
