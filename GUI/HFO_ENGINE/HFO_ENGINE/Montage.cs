@@ -24,7 +24,7 @@ namespace HFO_ENGINE
             Load_list(ComboBox_bipolar_montage, montage_names);
         }
         private void Load_list(ComboBox C, string[] list){
-            C.Items.AddRange(list);
+            C.DataSource = list.ToArray().Clone(); ;
         }
 
         private void Montage_save_btn_Click(object sender, EventArgs e) {

@@ -16,9 +16,9 @@ namespace HFO_ENGINE
         public Progress()
         {
             InitializeComponent();
-            this.snds_count = 0;
+            this.Snds_count = 0;
             ProgressBar.DataBindings.Add("Value", this, "WorkerState");
-           
+
         }
 
         //Colaborators
@@ -35,36 +35,64 @@ namespace HFO_ENGINE
                     PropertyChanged(this, new PropertyChangedEventArgs("WorkerState"));
             }
         }
-        public void UpdateProgress(int progressState) { WorkerState = progressState; }
-        private int snds_count { get; set; }
+        private int Snds_count { get; set; }
+
+        private delegate void SafeCallDelegate(int progress);
+        private delegate void StopTimer_SafeCallDelegate();
 
         //Methods
         public void StartTimer() {
             timer.Start();
         }
-        public void SaveAndReset_timer(){
-            this.timer.Stop();
 
-            int hs = snds_count / 3600;
-            int mins = (snds_count - hs * 3600) / 60;
-            int snds = snds_count - hs * 3600 - mins * 60;
+        public void SaveAndReset_timer_Safe()
+        {
+            if (previous_hs_txt.InvokeRequired ||  previous_min_txt.InvokeRequired || previous_snds_txt.InvokeRequired)
+            {
+                var d = new StopTimer_SafeCallDelegate(SaveAndReset_timer_Safe);
+                Invoke(d, new object[] {});
+            }
+            else
+            {
+                this.timer.Stop();
 
-            previous_hs_txt.Text = hs.ToString();
-            previous_min_txt.Text = mins.ToString();
-            previous_snds_txt.Text = snds.ToString();
+                int hs = Snds_count / 3600;
+                int mins = (Snds_count - hs * 3600) / 60;
+                int snds = Snds_count - hs * 3600 - mins * 60;
 
-            this.snds_count = 0;
+                previous_hs_txt.Text = hs.ToString();
+                previous_min_txt.Text = mins.ToString();
+                previous_snds_txt.Text = snds.ToString();
+
+                this.Snds_count = -1;
+                this.Timer_Tick(null, null);
+
+            }
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            this.snds_count++;
-            int hs = snds_count / 3600;
+            this.Snds_count++;
+            int hs = Snds_count / 3600;
             hours_label.Text = hs.ToString("D2");
-            int min = (snds_count - hs * 3600) / 60;
+            int min = (Snds_count - hs * 3600) / 60;
             minutes_label.Text = min.ToString("D2");
-            seconds_label.Text = (snds_count - hs * 3600 - min * 60).ToString("D2");
+            seconds_label.Text = (Snds_count - hs * 3600 - min * 60).ToString("D2");
 
         }
+
+        public void UpdateProgressSafe(int progress)
+        {
+            if (ProgressBar.InvokeRequired)
+            {
+                var d = new SafeCallDelegate(UpdateProgressSafe);
+                Invoke(d, new object[] { progress });
+            }
+            else
+            {
+                this.WorkerState = progress;
+            }
+        }
+
     }
 }

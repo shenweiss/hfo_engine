@@ -139,8 +139,7 @@ namespace HFO_ENGINE
         private void UploadTrcFile_And_GetMetadata(string trc_fname)
         {
             File.Copy(trc_fname, this.GetTRCTempPath(trc_fname), true);
-            /*
-
+            
             string uri_upload = this.GetAPI().URI() + "upload";
             WebClient webClient = new WebClient();
             void WebClientUploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
@@ -157,8 +156,8 @@ namespace HFO_ENGINE
             }
             webClient.UploadProgressChanged += WebClientUploadProgressChanged;
             webClient.UploadFileCompleted += WebClientUploadCompleted;
-            webClient.UploadFileAsync(new Uri(uri_upload), this.GetTRCTempPath(trc_fname));*/
-            Program.Controller.SetTrcMetadata(trc_fname); // delete
+            webClient.UploadFileAsync(new Uri(uri_upload), this.GetTRCTempPath(trc_fname));
+            //Program.Controller.SetTrcMetadata(trc_fname); // mock if trc is already uploaded
         }
         private void SetTrcMetadata(string trc_fname)
         {
@@ -177,31 +176,25 @@ namespace HFO_ENGINE
             //Requires: Params have been validated and IsBusy() == false
             this.Model.IsAnalizing = true;
             this.GetScreen_Home().AbrirFormHija(this.GetScreen_AnalizerProgress());
-            this.GetScreen_AnalizerProgress().StartTimer();
 
-
-            this.AnalizeWith(this.GetAnalizerParams());
-            this.GetScreen_AnalizerProgress().SaveAndReset_timer();
-            this.Log("Getting evt from remote server...");
-            this.DownloadEvt(Path.GetFileName(GetAnalizerParams().TrcFile), //The remote EvtFile name to be fetched
-                                              GetAnalizerParams().EvtFile); //Where to save it
-            this.Model.IsAnalizing = false;
-            this.Log("Analisis finished.");
-            /*this.GetScreen_AnalizerProgress().BgWorker.DoWork += (s, f) =>{
-                
-            };*/
-            //this.GetScreen_AnalizerProgress().BgWorker.RunWorkerAsync();
+            Thread hfo_analisis = new Thread( () =>
+                {
+                    this.GetScreen_AnalizerProgress().StartTimer();
+                    this.GetScreen_AnalizerProgress().UpdateProgressSafe(1);
+                    this.AnalizeWith(this.GetAnalizerParams());
+                    this.GetScreen_AnalizerProgress().SaveAndReset_timer_Safe();
+                    string remote_evt_fname = Path.GetFileNameWithoutExtension(GetAnalizerParams().TrcFile) + ".evt";
+                    this.DownloadEvt(remote_evt_fname,
+                                      GetAnalizerParams().EvtFile); //Where to save it
+                    this.Model.IsAnalizing = false;
+                }
+            );
+            hfo_analisis.Start();
         }
         private void AnalizeWith(AnalizerParams args)
         {
-            MessageBox.Show("Entering AnalizeWith");
-            this.GetScreen_AnalizerProgress().WorkerState = 10;
-            MessageBox.Show("Passed in AnalizeWith");
-
-            this.Log("Input trc_path: " + args.TrcFile);
-            this.Log("Output xml_path: " + args.EvtFile);
-
-            string uri_run = this.GetAPI().URI() + "run";
+            //Analizer call
+            string uri_run = this.GetAPI().URI() + "hfo_analizer";
             Dictionary<string, string> Params = new Dictionary<string, string>();
             Params.Add("trc_fname", Path.GetFileName(args.TrcFile));
             Params.Add("str_time", args.StartTime.ToString());
@@ -210,42 +203,35 @@ namespace HFO_ENGINE
             Params.Add("sug_montage", args.SuggestedMontage);
             Params.Add("bp_montage", args.BipolarMontage);
             string serialized_params = JsonConvert.SerializeObject(Params, new KeyValuePairConverter());
-            MessageBox.Show(serialized_params); //Debug
-            string run_response_str = this.PostJsonSync(uri_run, serialized_params);
-            MessageBox.Show(run_response_str); //Debug
 
+            //Analizer response
+            string run_response_str = this.PostJsonSync(uri_run, serialized_params);
             JsonObject run_response = (JsonObject)JsonValue.Parse(run_response_str);
 
             if (run_response.ContainsKey("error_msg")) MessageBox.Show(run_response["error_msg"]);
             else
             {
+                //keep updating progress bar while working remotely
                 string pid = run_response["task_id"];
-                MessageBox.Show("DEBUG: "+ pid);
-
                 string uri_task_state = this.GetAPI().URI() + "task_state/" + pid;
                 int progress = 0;
                 do
                 {
                     string task_state_string = this.GetJsonSync(uri_task_state);
-                    MessageBox.Show("DEBUG cycle: " + task_state_string); //Debug
-
+                    //ensures: status code is OK and progress is defined
                     JsonObject task_state = (JsonObject)JsonValue.Parse(task_state_string);
-                    if (!task_state.ContainsKey("progress")) { MessageBox.Show(task_state["error_msg"]); break; }
-                    else progress = task_state["progress"];
-                    this.GetScreen_AnalizerProgress().UpdateProgress(progress);
+                    progress = task_state["progress"];
+                    this.GetScreen_AnalizerProgress().UpdateProgressSafe(progress);
                     Thread.Sleep(1000);
                 } while (progress < 100);
             }
         }
         private void DownloadEvt(string remote_evt_fname, string dest)
         {
-            MessageBox.Show("Evt downloading started.");
+            MessageBox.Show("Downloading evt.");
             string uri_get_evt = this.GetAPI().URI() + "download/evts/" + remote_evt_fname;
-            using (var client = new WebClient())  
-            {
-                client.DownloadFile(uri_get_evt, dest);
-            }
-            MessageBox.Show("Evt was downloaded");
+            using (var client = new WebClient()) client.DownloadFile(uri_get_evt, dest);
+            MessageBox.Show("Evt download is complete.");
 
         }
         public bool IsAnalizing() { return this.Model.IsAnalizing; }
@@ -292,7 +278,7 @@ namespace HFO_ENGINE
             this.Model.ConvScreen_3 = new ConversorStep3();
             this.GetScreen_Home().AbrirFormHija(this.GetScreen_Conv_3());
         }
-        public void ConvertEdf(string trc_saving_dir)
+        public void ConvertEdf(string trc_saving_dir) //TODO PUT THREAD
         {
             string uri_edf_to_trc = this.GetAPI().URI() + "edf_to_trc";
             string serialized_conv_params = new JavaScriptSerializer().Serialize(this.GetConvParams()); 
@@ -310,19 +296,18 @@ namespace HFO_ENGINE
                 {
                     string task_state_string = this.GetJsonSync(uri_task_state);
                     JsonObject task_state = (JsonObject)JsonValue.Parse(task_state_string);
-                    if (!task_state.ContainsKey("progress")) { MessageBox.Show(task_state["error_msg"]); return; }
-                    else progress = task_state["progress"];
+                    //ensures: status code is OK, progress is defined
+                    progress = task_state["progress"];
                     this.GetScreen_Conv_3().Progress = progress;
                     Thread.Sleep(1000);
                 } while (progress < 100);
+                MessageBox.Show("Conversion completed.");
 
                 string basename = Path.GetFileNameWithoutExtension(GetConvParams().edf_fname);
                 string remote_trc_fname = basename + ".TRC";
                 string trc_saving_path = trc_saving_dir + remote_trc_fname;
-                MessageBox.Show("Conversion completed, downloading TRC from remote server...");
                 this.DownloadTRC(remote_trc_fname, trc_saving_path);
                 this.Model.IsConverting = false;
-                this.Log("Conversion finished.");
             }
         }
         public void DownloadTRC(string remote_trc_fname, string trc_saving_path)
@@ -330,12 +315,13 @@ namespace HFO_ENGINE
             WebClient webClient = new WebClient();
             void WebClientDownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
             {
-                Console.WriteLine("TRC download {0}% complete. ", e.ProgressPercentage);
+                Console.WriteLine("TRC download {0}% complete... ", e.ProgressPercentage);
                 this.GetScreen_Conv_3().Progress = (int)e.ProgressPercentage;
             }
             void WebClientDownloadCompleted(object sender, EventArgs e)
             {
                 MessageBox.Show("TRC download is complete. ");
+                this.Log("TRC download is completed.");
                 this.GetScreen_Conv_3().Progress = 0;
             }
             webClient.DownloadProgressChanged += WebClientDownloadProgressChanged;
@@ -397,7 +383,14 @@ namespace HFO_ENGINE
         private string GetJsonSync(string uri)
         {
             HttpClient httpClient = new HttpClient();
-            return httpClient.GetStringAsync(uri).Result;
+            //return httpClient.GetStringAsync(uri).Result;
+            HttpResponseMessage response = httpClient.GetAsync(uri).Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                MessageBox.Show("Unsuccesfull status code from server: " + response.StatusCode.ToString() );
+            }
+            return response.Content.ReadAsStringAsync().Result;
         }
         private string PostJsonSync(string uri, string serialized_json)
         {
@@ -410,9 +403,13 @@ namespace HFO_ENGINE
         }
         private void Log(string info)
         {
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter(this.GetLogFile(), true))
+            bool log_activated = true;
+            if (log_activated)
             {
-                file.WriteLine(info);
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(this.GetLogFile(), true))
+                {
+                    file.WriteLine(info);
+                }
             }
         }
         /*private void PrintDict(Dictionary<string, string> aDict)

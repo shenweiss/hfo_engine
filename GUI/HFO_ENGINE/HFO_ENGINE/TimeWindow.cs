@@ -17,7 +17,6 @@ namespace HFO_ENGINE
         public TimeWindow() //
         {
             InitializeComponent();
-            
         }
         public void SetTRCDuration(int duration_snds) {
             seconds_to_timer(duration_snds, trc_duration_picker);
@@ -43,5 +42,6 @@ namespace HFO_ENGINE
             else if (stop_time > Program.Controller.GetTrcDuration() ) MessageBox.Show("Input Error: Stop time is greater than TRC_duration.");
             else Program.Controller.SetTimeWindow(start_time, stop_time);
         }
+
     }
 }
