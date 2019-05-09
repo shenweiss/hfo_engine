@@ -26,12 +26,11 @@ namespace Micromed.ExternalCalculation.DemoIIExternalCalculation
             //string trc_path = pluginParameters.ExchangeTraceFilePathList[0];
             string trc_path = "\"" + (pluginParameters.TraceFilePathList[0]).Replace("\\","/") + "\"";
             string xml_out_path_real = "\"" + (pluginParameters.ExchangeEventFilePath).Replace("\\","/") + "\""; //donde lo voy a copiar despues por ssh
-            string fullPath = "C:/Program Files (x86)/Micromed/BrainQuick/Plugins/EzDetectGUI.exe";
+            string fullPath = "C:/Program Files (x86)/Micromed/BrainQuick/Plugins/hfo_engine/HFO_ENGINE.exe";
             //string fullPath = @"%windir%\system32\notepad.exe";
             string args = "--trc=" + trc_path + " --xml=" + xml_out_path_real;
-            string log_file = "C:/System98/temp/ez_detect_PLUG_LOG.txt";
-            string createText = args;
-            File.WriteAllText(log_file, createText);
+            string log_file = "C:/System98/temp/ez_detect_plugin_log.txt";
+            File.WriteAllText(log_file, args);
 
             ProcessStartInfo psi = new ProcessStartInfo
             {
@@ -45,8 +44,8 @@ namespace Micromed.ExternalCalculation.DemoIIExternalCalculation
 
         public DemoIIPlugin()
         {
-            Guid = Guid.Parse("1BC8E16D-3C09-40BE-8EC2-F9D7E6F0117C");
-            Name = "HFO Annotate - Demo II";
+            Guid = Guid.Parse("1BC8E16D-3C09-40BE-9DC2-F9D7E6F0117C");
+            Name = "HFO Annotate - Demo III";
             Description = "HfoAnnotate Test | External Calculation plugin";
             Author = "TJU|UBA";
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
