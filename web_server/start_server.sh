@@ -4,6 +4,9 @@ init_db=$2
 
 source venv/bin/activate
 
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+
 export FLASK_APP=hfo_engine_web
 
 if [ $init_db == "--init" ]

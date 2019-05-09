@@ -36,6 +36,33 @@ namespace HFO_ENGINE
                 if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("Progress"));
             }
         }
+        private delegate void ProgressSafeCallDelegate(int progress);
+        private delegate void ProgressDescSafeCallDelegate(string description);
+
+        public void UpdateProgressSafe(int progress)
+        {
+            if (ConvProgressBar.InvokeRequired)
+            {
+                var d = new ProgressSafeCallDelegate(UpdateProgressSafe);
+                Invoke(d, new object[] { progress });
+            }
+            else
+            {
+                this.Progress = progress;
+            }
+        }
+        public void UpdateProgressDescSafe(string description)
+        {
+            if (Progress_label.InvokeRequired)
+            {
+                var d = new ProgressDescSafeCallDelegate(UpdateProgressDescSafe);
+                Invoke(d, new object[] { description });
+            }
+            else
+            {
+                this.Progress_label.Text = description;
+            }
+        }
 
         //Methods
         private void browse_trc_out_dir_Click_1(object sender, EventArgs e)
@@ -53,7 +80,7 @@ namespace HFO_ENGINE
         {
             if (String.IsNullOrEmpty(Trc_out_conv_dir_txt.Text))
             {
-                MessageBox.Show("Please select an EDF file and set the the output saving path.");
+                MessageBox.Show("Please set the the output saving path.");
             }
             else
             {

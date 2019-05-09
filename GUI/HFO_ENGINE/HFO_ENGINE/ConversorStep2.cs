@@ -54,13 +54,13 @@ namespace HFO_ENGINE
         private void Confirm_translations_btn_Click(object sender, EventArgs e)
         {
             Dictionary<string, string> translations = new Dictionary<string, string>();
+            HashSet<String> short_names = new HashSet<string>();
 
             foreach (Panel line in PanelTranslations.Controls)
             {
                 int i = 0;
                 string long_name= string.Empty;
                 string short_name = string.Empty;
-
                 foreach (TextBox ch_name_box in line.Controls)
                 {
                     if (i == 0)
@@ -70,6 +70,16 @@ namespace HFO_ENGINE
                     }
                     else {
                         short_name = ch_name_box.Text;
+                        if (String.IsNullOrEmpty(short_name) || short_name.Length > 5)
+                        {
+                            MessageBox.Show("TRC channel names must have between 1 and 5 characters of length.");
+                            return;
+                        }
+                        if (!short_names.Add(short_name)) 
+                        {
+                            MessageBox.Show(String.Format("The translation {0} can't is repeted. Please correct and retry.", short_name));
+                            return;
+                        }
                         i = 0;
                     }
                 }

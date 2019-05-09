@@ -22,7 +22,7 @@ namespace HFO_ENGINE
         }
 
         //Colaborators
-        public BackgroundWorker BgWorker = new BackgroundWorker();
+        //public BackgroundWorker BgWorker = new BackgroundWorker();
         public event PropertyChangedEventHandler PropertyChanged;
         private int _workerState;
         public int WorkerState
@@ -37,7 +37,9 @@ namespace HFO_ENGINE
         }
         private int Snds_count { get; set; }
 
-        private delegate void SafeCallDelegate(int progress);
+        private delegate void ProgressSafeCallDelegate(int progress);
+        private delegate void ProgressDescSafeCallDelegate(string description);
+
         private delegate void StopTimer_SafeCallDelegate();
 
         //Methods
@@ -85,7 +87,7 @@ namespace HFO_ENGINE
         {
             if (ProgressBar.InvokeRequired)
             {
-                var d = new SafeCallDelegate(UpdateProgressSafe);
+                var d = new ProgressSafeCallDelegate(UpdateProgressSafe);
                 Invoke(d, new object[] { progress });
             }
             else
@@ -93,6 +95,20 @@ namespace HFO_ENGINE
                 this.WorkerState = progress;
             }
         }
+
+        public void UpdateProgressDescSafe(string description)
+        {
+            if (Progress_label.InvokeRequired)
+            {
+                var d = new ProgressDescSafeCallDelegate(UpdateProgressDescSafe);
+                Invoke(d, new object[] { description });
+            }
+            else
+            {
+                this.Progress_label.Text = description;
+            }
+        }
+
 
     }
 }

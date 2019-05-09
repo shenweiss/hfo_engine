@@ -26,6 +26,7 @@ namespace HFO_ENGINE
         public MainWindow(){
             InitializeComponent();
         }
+        private delegate void SafeCallDelegate(object formhija);
 
         //Buttons events
         private void Stack_menu_btn_Click(object sender, EventArgs e)
@@ -65,50 +66,84 @@ namespace HFO_ENGINE
         [DllImport("user32.DLL", EntryPoint = "SendMessage")]
         private extern static void SendMessage(System.IntPtr hWnd, int wMsg, int wParam, int lParam);
 
+        private void _Confirm_loosing_conv(object form)
+        {
+            if (MessageBox.Show("Conversion in progress will be lost. Continue?", "Analizer", MessageBoxButtons.OKCancel) == DialogResult.OK)
+            {
+                Program.Controller.SetConvFlag(false);
+                AbrirFormHija(form);
+            }
+        }
+        
         //Children Forms buttons
         public void AbrirFormHija(object formhija) {
-            if (this.panelContenedor.Controls.Count > 0)
-                this.panelContenedor.Controls.RemoveAt(0);
-            Form fh = formhija as Form;
-            fh.TopLevel = false;
-            fh.Dock = DockStyle.Fill;
-            this.panelContenedor.Controls.Add(fh);
-            this.panelContenedor.Tag = fh;
-            fh.Show();
+            if (panelContenedor.InvokeRequired)
+            {
+                var d = new SafeCallDelegate(AbrirFormHija);
+                Invoke(d, new object[] { formhija });
+            }
+            else
+            {
+                if (this.panelContenedor.Controls.Count > 0)
+                    this.panelContenedor.Controls.RemoveAt(0);
+                Form fh = formhija as Form;
+                fh.TopLevel = false;
+                fh.Dock = DockStyle.Fill;
+                this.panelContenedor.Controls.Add(fh);
+                this.panelContenedor.Tag = fh;
+                fh.Show();
+            }
         }
 
         private void BtnEEG_Click(object sender, EventArgs e) {
-            AbrirFormHija(Program.Controller.GetScreen_EEG());
+            if (Program.Controller.IsConverting()) _Confirm_loosing_conv(Program.Controller.GetScreen_EEG());
+            else AbrirFormHija(Program.Controller.GetScreen_EEG()); 
         }
         private void BtnMontage_Click(object sender, EventArgs e)
         {
             if (!Program.Controller.IsMetadataSetted()) {
                 MessageBox.Show("Please first save the file to be used from the EEG menu.");
             }
-            else AbrirFormHija( Program.Controller.GetScreen_Montage() );
+            else { if (Program.Controller.IsConverting()) _Confirm_loosing_conv(Program.Controller.GetScreen_Montage());
+                else AbrirFormHija(Program.Controller.GetScreen_Montage());
+            }
         }
         private void BtnTimeWindow_Click(object sender, EventArgs e)
         {
             if (!Program.Controller.IsMetadataSetted()){
                 MessageBox.Show("Please first save the file to be used from the EEG menu.");
             }
-            else AbrirFormHija( Program.Controller.GetScreen_TimeWindow() );
+            else
+            {
+                if (Program.Controller.IsConverting()) _Confirm_loosing_conv(Program.Controller.GetScreen_TimeWindow());
+                else AbrirFormHija(Program.Controller.GetScreen_TimeWindow());
+            }
         }
         private void BtnMultiprocessing_Click(object sender, EventArgs e) {
-            AbrirFormHija( Program.Controller.GetScreen_CycleTime());
+            if (Program.Controller.IsConverting()) _Confirm_loosing_conv(Program.Controller.GetScreen_CycleTime());
+            else AbrirFormHija(Program.Controller.GetScreen_CycleTime());
         }
         private void BtnOutput_Click(object sender, EventArgs e) {
-            AbrirFormHija(Program.Controller.GetScreen_Evt());
+            if (Program.Controller.IsConverting()) _Confirm_loosing_conv(Program.Controller.GetScreen_Evt());
+            else AbrirFormHija(Program.Controller.GetScreen_Evt());
         }
         private void BtnAdvancedSettings_Click(object sender, EventArgs e) {
-            AbrirFormHija( Program.Controller.GetScreen_Settings());
+            if (Program.Controller.IsConverting()) _Confirm_loosing_conv(Program.Controller.GetScreen_Settings());
+            else AbrirFormHija(Program.Controller.GetScreen_Settings());
         }
 
         private void StartBtn_Click(object sender, EventArgs e) {
+            var c = Program.Controller;
+
             if (Program.Controller.IsAnalizing()) AbrirFormHija(Program.Controller.GetScreen_AnalizerProgress());
-            else if (Program.Controller.IsConverting()) MessageBox.Show("Please complete the conversion prior to analizing.");
-            else
-               {
+            else {
+
+                if (Program.Controller.IsConverting()) {
+                    if (MessageBox.Show("Conversion in progress will be lost. Continue?", "Analizer",
+                        MessageBoxButtons.OKCancel) != DialogResult.OK) return;
+                    else Program.Controller.SetConvFlag(false);
+                }
+
                 AnalizerParams args = Program.Controller.GetAnalizerParams();
 
                 //Check that all params have been setted by the user
@@ -116,11 +151,12 @@ namespace HFO_ENGINE
                 {
                     MessageBox.Show("Please pick a TRC file to analize in the EEG menu.");
                 }
-                else if (string.IsNullOrEmpty(args.SuggestedMontage) || string.IsNullOrEmpty(args.BipolarMontage))
+                else if( !c.GetMontageNames().Contains(args.SuggestedMontage) || 
+                            !c.GetMontageNames().Contains(args.BipolarMontage) )
                 {
                     MessageBox.Show("Please set the montages in Montage menu.");
                 }
-                else if (args.StopTime == 0) {
+                else if (args.StartTime < 0 || args.StopTime <= args.StartTime || args.StopTime > c.GetTrcDuration()) {
                     MessageBox.Show("Please set your Time-window settings in Time-Window menu.");
                 }
                 else if (args.CycleTime == 0) {
@@ -134,9 +170,10 @@ namespace HFO_ENGINE
                 {
                     string evt_dir = Path.GetDirectoryName(args.EvtFile);
                     string evt_fname = Path.GetFileNameWithoutExtension(args.TrcFile) + ".evt";
+                    Program.Controller.SetEvtFile(evt_dir, evt_fname);
                 }
                 else if (string.IsNullOrEmpty(Program.Controller.GetAPI().Hostname) ||
-                         string.IsNullOrEmpty(Program.Controller.GetAPI().Port))
+                            string.IsNullOrEmpty(Program.Controller.GetAPI().Port))
                 {
                     MessageBox.Show("Please set the API settings in Advanced settings menu.");
                 }

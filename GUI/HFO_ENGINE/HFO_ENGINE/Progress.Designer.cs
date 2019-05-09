@@ -31,7 +31,6 @@
             this.components = new System.ComponentModel.Container();
             this.Progress_title = new System.Windows.Forms.Label();
             this.ProgressBar = new System.Windows.Forms.ProgressBar();
-            this.Progress_warning = new System.Windows.Forms.Label();
             this.timer = new System.Windows.Forms.Timer(this.components);
             this.label6 = new System.Windows.Forms.Label();
             this.hours_label = new System.Windows.Forms.Label();
@@ -48,6 +47,7 @@
             this.previous_min_txt = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.previous_snds_txt = new System.Windows.Forms.TextBox();
+            this.Progress_label = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // Progress_title
@@ -68,18 +68,6 @@
             this.ProgressBar.Size = new System.Drawing.Size(380, 15);
             this.ProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.ProgressBar.TabIndex = 31;
-            // 
-            // Progress_warning
-            // 
-            this.Progress_warning.BackColor = System.Drawing.Color.Transparent;
-            this.Progress_warning.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.Progress_warning.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Progress_warning.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.Progress_warning.Location = new System.Drawing.Point(47, 120);
-            this.Progress_warning.Name = "Progress_warning";
-            this.Progress_warning.Size = new System.Drawing.Size(334, 30);
-            this.Progress_warning.TabIndex = 32;
-            this.Progress_warning.Text = "Please wait until the progress bar gets to the end...";
             // 
             // timer
             // 
@@ -269,12 +257,24 @@
             this.previous_snds_txt.Text = "00";
             this.previous_snds_txt.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
+            // Progress_label
+            // 
+            this.Progress_label.BackColor = System.Drawing.Color.Transparent;
+            this.Progress_label.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.Progress_label.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
+            this.Progress_label.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.Progress_label.Location = new System.Drawing.Point(47, 150);
+            this.Progress_label.Name = "Progress_label";
+            this.Progress_label.Size = new System.Drawing.Size(347, 26);
+            this.Progress_label.TabIndex = 53;
+            // 
             // Progress
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
             this.ClientSize = new System.Drawing.Size(480, 512);
+            this.Controls.Add(this.Progress_label);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.previous_snds_txt);
             this.Controls.Add(this.previous_min_label);
@@ -290,7 +290,6 @@
             this.Controls.Add(this.label4);
             this.Controls.Add(this.hours_label);
             this.Controls.Add(this.label6);
-            this.Controls.Add(this.Progress_warning);
             this.Controls.Add(this.ProgressBar);
             this.Controls.Add(this.Progress_title);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -305,7 +304,6 @@
 
         private System.Windows.Forms.Label Progress_title;
         private System.Windows.Forms.ProgressBar ProgressBar;
-        private System.Windows.Forms.Label Progress_warning;
         private System.Windows.Forms.Timer timer;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label hours_label;
@@ -322,5 +320,6 @@
         private System.Windows.Forms.TextBox previous_min_txt;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox previous_snds_txt;
+        private System.Windows.Forms.Label Progress_label;
     }
 }

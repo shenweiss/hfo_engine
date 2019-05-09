@@ -39,6 +39,7 @@
             this.line = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.Progress_label = new System.Windows.Forms.Label();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.BrowseTRCbtn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -86,6 +87,7 @@
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.Progress_label);
             this.panel2.Controls.Add(this.uploadProgressBar);
             this.panel2.Controls.Add(this.EEG_save_btn);
             this.panel2.Controls.Add(this.TrcPath_txtBx);
@@ -165,6 +167,17 @@
             this.panel1.Size = new System.Drawing.Size(390, 95);
             this.panel1.TabIndex = 10;
             // 
+            // Progress_label
+            // 
+            this.Progress_label.BackColor = System.Drawing.Color.Transparent;
+            this.Progress_label.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.Progress_label.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
+            this.Progress_label.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.Progress_label.Location = new System.Drawing.Point(-3, 202);
+            this.Progress_label.Name = "Progress_label";
+            this.Progress_label.Size = new System.Drawing.Size(347, 26);
+            this.Progress_label.TabIndex = 38;
+            // 
             // EEG
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -199,5 +212,6 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.TextBox TrcPath_txtBx;
         private System.Windows.Forms.ProgressBar uploadProgressBar;
+        private System.Windows.Forms.Label Progress_label;
     }
 }

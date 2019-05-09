@@ -39,6 +39,7 @@
             this.Trc_out_conv_dir_txt = new System.Windows.Forms.TextBox();
             this.line = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.Progress_label = new System.Windows.Forms.Label();
             this.panel4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.browse_trc_out_dir)).BeginInit();
@@ -49,7 +50,7 @@
             // 
             this.panel4.Controls.Add(this.Translation_label);
             this.panel4.Controls.Add(this.pictureBox1);
-            this.panel4.Location = new System.Drawing.Point(12, 12);
+            this.panel4.Location = new System.Drawing.Point(30, 50);
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(390, 67);
             this.panel4.TabIndex = 37;
@@ -108,7 +109,7 @@
             this.ConvertButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.ConvertButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold);
             this.ConvertButton.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.ConvertButton.Location = new System.Drawing.Point(229, 229);
+            this.ConvertButton.Location = new System.Drawing.Point(121, 199);
             this.ConvertButton.Name = "ConvertButton";
             this.ConvertButton.Size = new System.Drawing.Size(121, 35);
             this.ConvertButton.TabIndex = 42;
@@ -150,23 +151,35 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.Progress_label);
             this.panel1.Controls.Add(this.ConvertButton);
             this.panel1.Controls.Add(this.ConvProgressBar);
             this.panel1.Controls.Add(this.line);
             this.panel1.Controls.Add(this.Trc_out_conv_dir_txt);
             this.panel1.Controls.Add(this.SavingConvTrcDir);
             this.panel1.Controls.Add(this.browse_trc_out_dir);
-            this.panel1.Location = new System.Drawing.Point(21, 117);
+            this.panel1.Location = new System.Drawing.Point(60, 157);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(360, 320);
             this.panel1.TabIndex = 46;
+            // 
+            // Progress_label
+            // 
+            this.Progress_label.BackColor = System.Drawing.Color.Transparent;
+            this.Progress_label.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.Progress_label.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
+            this.Progress_label.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.Progress_label.Location = new System.Drawing.Point(3, 260);
+            this.Progress_label.Name = "Progress_label";
+            this.Progress_label.Size = new System.Drawing.Size(347, 26);
+            this.Progress_label.TabIndex = 47;
             // 
             // ConversorStep3
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
-            this.ClientSize = new System.Drawing.Size(464, 473);
+            this.ClientSize = new System.Drawing.Size(480, 512);
             this.Controls.Add(this.panel4);
             this.Controls.Add(this.panel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -193,5 +206,6 @@
         private System.Windows.Forms.TextBox Trc_out_conv_dir_txt;
         private System.Windows.Forms.Label line;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Label Progress_label;
     }
 }

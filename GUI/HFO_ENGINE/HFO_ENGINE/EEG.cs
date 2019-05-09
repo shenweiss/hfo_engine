@@ -36,6 +36,10 @@ namespace HFO_ENGINE
             this.TrcPath_txtBx.Text = trc_fname;
         }
 
+        public void UpdateProgressDesc(string desc) {
+            this.Progress_label.Text = desc;
+        }
+
         private void BrowseTRC_Btn_Click(object sender, EventArgs e){
             OpenFileDialog openFileDialog1 = new OpenFileDialog
             {
@@ -67,6 +71,7 @@ namespace HFO_ENGINE
         private void EEG_save_btn_Click(object sender, EventArgs e){
             Program.Controller.SetTrcFile(this.TrcPath_txtBx.Text);
         }
+
 
     }
 }

@@ -19,19 +19,47 @@ namespace HFO_ENGINE
         public ConversorStep1()
         {
             InitializeComponent();
-            uploadProgressBar.DataBindings.Add("Value", this, "UploadProgress");
+            uploadProgressBar.DataBindings.Add("Value", this, "Progress");
         }
 
         //Colaborators 
-        private int _uploadProgress;
+        private int _progress;
         public event PropertyChangedEventHandler PropertyChanged;
-        public int UploadProgress
+        public int Progress
         {
-            get { return _uploadProgress; }
+            get { return _progress; }
             set
             {
-                _uploadProgress = value;
-                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("UploadProgress"));
+                _progress = value;
+                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("Progress"));
+            }
+        }
+        private delegate void ProgressSafeCallDelegate(int progress);
+        private delegate void ProgressDescSafeCallDelegate(string description);
+
+        public void UpdateProgressSafe(int progress)
+        {
+            if (uploadProgressBar.InvokeRequired)
+            {
+                var d = new ProgressSafeCallDelegate(UpdateProgressSafe);
+                Invoke(d, new object[] { progress });
+            }
+            else
+            {
+                this.Progress = progress;
+            }
+        }
+
+        public void UpdateProgressDescSafe(string description)
+        {
+            if (Progress_label.InvokeRequired)
+            {
+                var d = new ProgressDescSafeCallDelegate(UpdateProgressDescSafe);
+                Invoke(d, new object[] { description });
+            }
+            else
+            {
+                this.Progress_label.Text = description;
             }
         }
 
@@ -64,8 +92,7 @@ namespace HFO_ENGINE
                 else Program.Controller.StartEdfConversion(EdfPath_txtBx.Text);
             }
         }
-        
-        
+
     }
   
 }

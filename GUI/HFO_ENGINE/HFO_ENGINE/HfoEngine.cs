@@ -92,6 +92,7 @@ namespace HFO_ENGINE
             else
             {
                 this.Model.AnalizerParams.TrcFile = trc_fname;
+                this.Log(String.Format("TrcFile setted to {0}", trc_fname));
                 this.UploadTrcFile_And_GetMetadata(trc_fname);
             }
         }
@@ -102,6 +103,8 @@ namespace HFO_ENGINE
             {
                 this.Model.AnalizerParams.SuggestedMontage = sug_montage;
                 this.Model.AnalizerParams.BipolarMontage = bp_montage;
+                this.Log(String.Format("Montages setted to Suggested: {0} and Bipolar: {1}", sug_montage, bp_montage));
+
             }
         }
         public void SetTimeWindow(int start_time, int stop_time)
@@ -111,6 +114,8 @@ namespace HFO_ENGINE
             {
                 this.Model.AnalizerParams.StartTime = start_time;
                 this.Model.AnalizerParams.StopTime = stop_time;
+                this.Log(String.Format("Time-window setted to [{0} , {1})  ", start_time, stop_time));
+
             }
         }
         public void SetCycleTime(bool parallel_flag, int cycle_time)
@@ -120,11 +125,16 @@ namespace HFO_ENGINE
             {
                 if (parallel_flag) this.Model.AnalizerParams.CycleTime = cycle_time;
                 else this.Model.AnalizerParams.CycleTime = GetAnalizerParams().StopTime - GetAnalizerParams().StartTime;
+                this.Log(String.Format("Cycletime setted"));
             }
         }
         public void SetEvtFile(string evt_dir, string evt_fname){
             if (this.IsBusy()) this.UnavailableOptionMsg();
-            else this.Model.AnalizerParams.EvtFile = evt_dir + evt_fname;
+            else
+            {
+                this.Model.AnalizerParams.EvtFile = evt_dir + evt_fname;
+                this.Log(String.Format("Evt saving path setted to {0}", evt_dir + evt_fname));
+            }
         }
         public void SetAdvancedSettings(string hostname, string port, string log_file, string trc_temp_dir)
         {
@@ -134,12 +144,15 @@ namespace HFO_ENGINE
                 this.Model.API.Port = port;
                 this.Model.LogFile = log_file;
                 this.Model.TRCTempDir =  trc_temp_dir;
+                this.Log(String.Format("Setting advanced parameters {0} {1}, {2}, {3}", 
+                        hostname, port, log_file, trc_temp_dir));
+
             }
         }
         private void UploadTrcFile_And_GetMetadata(string trc_fname)
         {
             File.Copy(trc_fname, this.GetTRCTempPath(trc_fname), true);
-            
+            Program.Controller.GetScreen_EEG().UpdateProgressDesc("Uploading TRC to the server...");
             string uri_upload = this.GetAPI().URI() + "upload";
             WebClient webClient = new WebClient();
             void WebClientUploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
@@ -149,18 +162,21 @@ namespace HFO_ENGINE
             }
             void WebClientUploadCompleted(object sender, UploadFileCompletedEventArgs e)
             {
-                MessageBox.Show("Upload is complete. ");
+                this.Log("Upload TRC was completed.");
+                this.GetScreen_EEG().UpdateProgressDesc("Setting TRC metadata...");
+                Program.Controller.GetScreen_EEG().UploadProgress = 20;
                 Program.Controller.SetTrcMetadata(trc_fname);
+                this.GetScreen_EEG().UpdateProgressDesc("");
                 Program.Controller.GetScreen_EEG().UploadProgress = 0;
-
             }
             webClient.UploadProgressChanged += WebClientUploadProgressChanged;
             webClient.UploadFileCompleted += WebClientUploadCompleted;
-            webClient.UploadFileAsync(new Uri(uri_upload), this.GetTRCTempPath(trc_fname));
+            webClient.UploadFileAsync(new Uri(uri_upload), this.GetTRCTempPath(trc_fname)); 
             //Program.Controller.SetTrcMetadata(trc_fname); // mock if trc is already uploaded
-        }
+        } 
         private void SetTrcMetadata(string trc_fname)
         {
+            this.Log("Setting TRC metadata");
             string uri_trc_info = this.GetAPI().URI() + "trc_info/" + Path.GetFileName(trc_fname);
             string json_resp = GetJsonSync(uri_trc_info);
             TRCInfo trc_info = JsonConvert.DeserializeObject<TRCInfo>(json_resp);
@@ -174,19 +190,31 @@ namespace HFO_ENGINE
         public void RunHFOAnalizer()
         {
             //Requires: Params have been validated and IsBusy() == false
+            this.Log("Starting TRC analisis.");
             this.Model.IsAnalizing = true;
             this.GetScreen_Home().AbrirFormHija(this.GetScreen_AnalizerProgress());
+            this.GetScreen_AnalizerProgress().StartTimer();
 
             Thread hfo_analisis = new Thread( () =>
                 {
-                    this.GetScreen_AnalizerProgress().StartTimer();
                     this.GetScreen_AnalizerProgress().UpdateProgressSafe(1);
+                    this.GetScreen_AnalizerProgress().UpdateProgressDescSafe("Analizing TRC in remote server...");
                     this.AnalizeWith(this.GetAnalizerParams());
                     this.GetScreen_AnalizerProgress().SaveAndReset_timer_Safe();
+
+                    this.GetScreen_AnalizerProgress().UpdateProgressSafe(1);
+                    this.GetScreen_AnalizerProgress().UpdateProgressDescSafe("Downloading detected events as evt file...");
                     string remote_evt_fname = Path.GetFileNameWithoutExtension(GetAnalizerParams().TrcFile) + ".evt";
-                    this.DownloadEvt(remote_evt_fname,
-                                      GetAnalizerParams().EvtFile); //Where to save it
+                    this.DownloadEvt(remote_evt_fname, GetAnalizerParams().EvtFile);
+                    this.GetScreen_AnalizerProgress().UpdateProgressSafe(100);
+                    this.GetScreen_AnalizerProgress().UpdateProgressDescSafe("Evt was downloaded.");
+
+                    MessageBox.Show("Analisis finished."); //Reseting for next run
+                    this.GetScreen_AnalizerProgress().UpdateProgressSafe(0);
+                    this.GetScreen_AnalizerProgress().UpdateProgressDescSafe("");
+
                     this.Model.IsAnalizing = false;
+                    this.Log("Analisis thread finished");
                 }
             );
             hfo_analisis.Start();
@@ -204,14 +232,18 @@ namespace HFO_ENGINE
             Params.Add("bp_montage", args.BipolarMontage);
             string serialized_params = JsonConvert.SerializeObject(Params, new KeyValuePairConverter());
 
-            //Analizer response
+            this.Log(String.Format("Analisis request with params: {0},{1},{2},{3},{4},{5}",
+                            Params["trc_fname"], Params["str_time"], Params["stp_time"],
+                            Params["cycle_time"], Params["sug_montage"], Params["bp_montage"]));
             string run_response_str = this.PostJsonSync(uri_run, serialized_params);
+
+            //Analizer response
             JsonObject run_response = (JsonObject)JsonValue.Parse(run_response_str);
 
             if (run_response.ContainsKey("error_msg")) MessageBox.Show(run_response["error_msg"]);
             else
             {
-                //keep updating progress bar while working remotely
+                //Keep updating progress bar while working remotely
                 string pid = run_response["task_id"];
                 string uri_task_state = this.GetAPI().URI() + "task_state/" + pid;
                 int progress = 0;
@@ -224,15 +256,14 @@ namespace HFO_ENGINE
                     this.GetScreen_AnalizerProgress().UpdateProgressSafe(progress);
                     Thread.Sleep(1000);
                 } while (progress < 100);
+                this.Log("Analizer has finished remotely.");
             }
         }
         private void DownloadEvt(string remote_evt_fname, string dest)
         {
-            MessageBox.Show("Downloading evt.");
+            this.Log("Downloading evt");
             string uri_get_evt = this.GetAPI().URI() + "download/evts/" + remote_evt_fname;
             using (var client = new WebClient()) client.DownloadFile(uri_get_evt, dest);
-            MessageBox.Show("Evt download is complete.");
-
         }
         public bool IsAnalizing() { return this.Model.IsAnalizing; }
 
@@ -241,23 +272,31 @@ namespace HFO_ENGINE
         {
             //Requires: Params have been validated and IsBusy() == false
             this.Model.IsConverting = true;
+            this.GetScreen_Conv_1().UpdateProgressDescSafe("Uploading edf to the server...");
 
             string uri_upload = this.GetAPI().URI() + "upload";
             WebClient webClient = new WebClient();
             void WebClientUploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
             {
-                Console.WriteLine("Edf upload {0}% complete. ", e.ProgressPercentage);
-                this.GetScreen_Conv_1().UploadProgress = (int)e.ProgressPercentage;
+                Console.WriteLine("Uploading edf to the server... {0}% complete.", e.ProgressPercentage);
+                this.GetScreen_Conv_1().UpdateProgressSafe(e.ProgressPercentage);
             }
             void WebClientUploadCompleted(object sender, UploadFileCompletedEventArgs e)
             {
-                MessageBox.Show("Edf upload is complete. ");
-                this.GetScreen_Conv_1().UploadProgress = 0;
+                this.GetScreen_Conv_1().UpdateProgressDescSafe("Getting suggested channel name mapping...");
+                this.GetScreen_Conv_1().UpdateProgressSafe(15);
                 Dictionary<string, string> suggested_mapping = this.GetChMapping(edf_fname);
+                this.GetScreen_Conv_1().UpdateProgressSafe(50);
+
                 this.Model.ConversionParams = new ConversionParams(Path.GetFileName(edf_fname),
                                                                     suggested_mapping);
+                this.GetScreen_Conv_1().UpdateProgressSafe(65);
+
                 //Go to confirm translations screen
                 this.Model.ConvScreen_2 = new ConversorStep2(suggested_mapping);
+                this.GetScreen_Conv_1().UpdateProgressSafe(100);
+                this.GetScreen_Conv_1().UpdateProgressDescSafe("");
+                this.GetScreen_Conv_1().UpdateProgressSafe(0);
                 this.GetScreen_Home().AbrirFormHija(this.GetScreen_Conv_2());
             }
             webClient.UploadProgressChanged += WebClientUploadProgressChanged;
@@ -278,51 +317,62 @@ namespace HFO_ENGINE
             this.Model.ConvScreen_3 = new ConversorStep3();
             this.GetScreen_Home().AbrirFormHija(this.GetScreen_Conv_3());
         }
-        public void ConvertEdf(string trc_saving_dir) //TODO PUT THREAD
+        public void ConvertEdf(string trc_saving_dir) 
         {
-            string uri_edf_to_trc = this.GetAPI().URI() + "edf_to_trc";
-            string serialized_conv_params = new JavaScriptSerializer().Serialize(this.GetConvParams()); 
-            string run_response_str = this.PostJsonSync(uri_edf_to_trc, serialized_conv_params);
-            JsonObject run_response = (JsonObject)JsonValue.Parse(run_response_str);
+            this.GetScreen_Conv_3().UpdateProgressDescSafe("Performing conversion in remote server...");
+            this.GetScreen_Conv_3().UpdateProgressSafe(5);
 
-            if (run_response.ContainsKey("error_msg")) MessageBox.Show(run_response["error_msg"]);
-            else
-            {
-                string pid = run_response["task_id"];
-                string uri_task_state = this.GetAPI().URI() + "task_state/" + pid;
-                this.GetScreen_Conv_3().Progress = 10;
-                int progress = 0;
-                do
+            Thread conversion = new Thread( () => {
+                string uri_edf_to_trc = this.GetAPI().URI() + "edf_to_trc";
+                string serialized_conv_params = new JavaScriptSerializer().Serialize(this.GetConvParams());
+                string run_response_str = this.PostJsonSync(uri_edf_to_trc, serialized_conv_params);
+                JsonObject run_response = (JsonObject)JsonValue.Parse(run_response_str);
+
+                if (run_response.ContainsKey("error_msg")) MessageBox.Show(run_response["error_msg"]);
+                else
                 {
-                    string task_state_string = this.GetJsonSync(uri_task_state);
-                    JsonObject task_state = (JsonObject)JsonValue.Parse(task_state_string);
-                    //ensures: status code is OK, progress is defined
-                    progress = task_state["progress"];
-                    this.GetScreen_Conv_3().Progress = progress;
-                    Thread.Sleep(1000);
-                } while (progress < 100);
-                MessageBox.Show("Conversion completed.");
+                    string pid = run_response["task_id"];
+                    string uri_task_state = this.GetAPI().URI() + "task_state/" + pid;
+                    int progress = 0;
+                    do
+                    {
+                        string task_state_string = this.GetJsonSync(uri_task_state);
+                        JsonObject task_state = (JsonObject)JsonValue.Parse(task_state_string);
+                        //ensures: status code is OK, progress is defined
+                        progress = task_state["progress"];
+                        this.GetScreen_Conv_3().UpdateProgressSafe(progress);
+                        Thread.Sleep(1000);
+                    } while (progress < 100);
+                    this.Log("Conversion completed.");
 
-                string basename = Path.GetFileNameWithoutExtension(GetConvParams().edf_fname);
-                string remote_trc_fname = basename + ".TRC";
-                string trc_saving_path = trc_saving_dir + remote_trc_fname;
-                this.DownloadTRC(remote_trc_fname, trc_saving_path);
+                    string basename = Path.GetFileNameWithoutExtension(GetConvParams().edf_fname);
+                    string remote_trc_fname = basename + ".TRC";
+                    string trc_saving_path = trc_saving_dir + remote_trc_fname;
+                    this.DownloadTRC(remote_trc_fname, trc_saving_path);
+                }
                 this.Model.IsConverting = false;
-            }
+                }
+            );
+            conversion.Start();
+           
         }
         public void DownloadTRC(string remote_trc_fname, string trc_saving_path)
         {
+            this.GetScreen_Conv_3().UpdateProgressSafe(0);
+            this.GetScreen_Conv_3().UpdateProgressDescSafe("Downloading converted TRC from remote server...");
+
             WebClient webClient = new WebClient();
             void WebClientDownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
             {
-                Console.WriteLine("TRC download {0}% complete... ", e.ProgressPercentage);
-                this.GetScreen_Conv_3().Progress = (int)e.ProgressPercentage;
+                Console.WriteLine("Downloading converted TRC {0}% complete... ", e.ProgressPercentage);
+                this.GetScreen_Conv_3().UpdateProgressSafe(e.ProgressPercentage);
             }
             void WebClientDownloadCompleted(object sender, EventArgs e)
             {
-                MessageBox.Show("TRC download is complete. ");
-                this.Log("TRC download is completed.");
-                this.GetScreen_Conv_3().Progress = 0;
+                this.GetScreen_Conv_3().UpdateProgressSafe(100);
+                this.GetScreen_Conv_3().UpdateProgressDescSafe("Download has finished.");
+
+                this.Log("Converted TRC download is complete.");
             }
             webClient.DownloadProgressChanged += WebClientDownloadProgressChanged;
             webClient.DownloadFileCompleted += WebClientDownloadCompleted;
@@ -331,6 +381,7 @@ namespace HFO_ENGINE
             webClient.DownloadFileAsync(new Uri(uri_download_trc), trc_saving_path);
         }
         public bool IsConverting() { return this.Model.IsConverting; }
+        public void SetConvFlag(bool flag) { this.Model.IsConverting = flag; }
 
         //General Program Logic
         public void TestConnection()
@@ -365,25 +416,9 @@ namespace HFO_ENGINE
         public bool IsBusy() { return IsConverting() || IsAnalizing(); }
 
         //Extras
-        /*private async Task<JsonObject> GetJsonAsync(string uri)
-        {
-            HttpClient httpClient = new HttpClient();
-            string content = await httpClient.GetStringAsync(uri);
-            return await Task.Run(() => (JsonObject)JsonValue.Parse(content));
-        }
-        private async Task<JsonObject> PostJsonASync(string uri, JsonObject serialized_json)
-        {
-            using (HttpClient httpClient = new HttpClient())
-            {
-                StringContent body = new StringContent(serialized_json, Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await httpClient.PostAsync(uri, body);
-                return (JsonObject)JsonValue.Parse(await response.Content.ReadAsStringAsync());
-            }
-        }*/
         private string GetJsonSync(string uri)
         {
             HttpClient httpClient = new HttpClient();
-            //return httpClient.GetStringAsync(uri).Result;
             HttpResponseMessage response = httpClient.GetAsync(uri).Result;
 
             if (!response.IsSuccessStatusCode)
@@ -403,7 +438,7 @@ namespace HFO_ENGINE
         }
         private void Log(string info)
         {
-            bool log_activated = true;
+            bool log_activated = false;
             if (log_activated)
             {
                 using (System.IO.StreamWriter file = new System.IO.StreamWriter(this.GetLogFile(), true))
@@ -412,14 +447,7 @@ namespace HFO_ENGINE
                 }
             }
         }
-        /*private void PrintDict(Dictionary<string, string> aDict)
-        {
-            Console.WriteLine("{");
-            foreach (KeyValuePair<string, string> kvp in aDict){
-                Console.WriteLine("       {0} : {1}", kvp.Key, kvp.Value);
-            }
-            Console.WriteLine("}");
-        }*/
+        
     } 
 
     class Model {
@@ -430,8 +458,7 @@ namespace HFO_ENGINE
             this.ConversionParams = null;
 
             this.TrcDuration = 0;
-            this.IsAnalizing = false;
-            this.IsConverting = false;
+            this.MontageNames = new string[] { };
             this.LogFile = Program.MainDir() + "logs/ez_detect_gui_log.txt";
             this.TRCTempDir = Program.MainDir() + "temp/";
 
@@ -449,6 +476,8 @@ namespace HFO_ENGINE
             this.ConvScreen_2 = null;
             this.ConvScreen_3 = null;
 
+            this.IsAnalizing = false;
+            this.IsConverting = false;
         }
 
         //Collaborators

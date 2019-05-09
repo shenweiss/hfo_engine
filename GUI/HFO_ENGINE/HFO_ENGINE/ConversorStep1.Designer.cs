@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConversorStep1));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.Progress_label = new System.Windows.Forms.Label();
             this.uploadProgressBar = new System.Windows.Forms.ProgressBar();
             this.EdfPath_txtBx = new System.Windows.Forms.TextBox();
             this.SelectEDFbtn = new System.Windows.Forms.PictureBox();
@@ -47,6 +48,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.Progress_label);
             this.panel1.Controls.Add(this.uploadProgressBar);
             this.panel1.Controls.Add(this.EdfPath_txtBx);
             this.panel1.Controls.Add(this.SelectEDFbtn);
@@ -57,6 +59,17 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(360, 320);
             this.panel1.TabIndex = 34;
+            // 
+            // Progress_label
+            // 
+            this.Progress_label.BackColor = System.Drawing.Color.Transparent;
+            this.Progress_label.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.Progress_label.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F);
+            this.Progress_label.ForeColor = System.Drawing.SystemColors.AppWorkspace;
+            this.Progress_label.Location = new System.Drawing.Point(3, 211);
+            this.Progress_label.Name = "Progress_label";
+            this.Progress_label.Size = new System.Drawing.Size(347, 26);
+            this.Progress_label.TabIndex = 37;
             // 
             // uploadProgressBar
             // 
@@ -194,5 +207,6 @@
         private System.Windows.Forms.Label Convert_title;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.ProgressBar uploadProgressBar;
+        private System.Windows.Forms.Label Progress_label;
     }
 }
