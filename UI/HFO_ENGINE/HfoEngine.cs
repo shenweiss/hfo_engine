@@ -18,6 +18,10 @@ using HFO_ENGINE;
 using Newtonsoft.Json.Converters;
 using System.ComponentModel;
 
+//TODO
+
+//Debug Conversor
+//Debug analizer
 
 namespace HFO_ENGINE
 {
@@ -167,7 +171,7 @@ namespace HFO_ENGINE
             }
             webClient.UploadProgressChanged += WebClientUploadProgressChanged;
             webClient.UploadFileCompleted += WebClientUploadCompleted;
-            webClient.UploadFileAsync(new Uri(uri_upload), this.GetTRCTempPath(trc_fname)); 
+            webClient.UploadFileAsync(new Uri(uri_upload), this.GetTRCTempPath(trc_fname));
             //Program.Controller.SetTrcMetadata(trc_fname); // mock if trc is already uploaded
         } 
         private void SetTrcMetadata(string trc_fname)

@@ -66,6 +66,7 @@ namespace HFO_ENGINE
         [DllImport("user32.DLL", EntryPoint = "SendMessage")]
         private extern static void SendMessage(System.IntPtr hWnd, int wMsg, int wParam, int lParam);
 
+        private string IS_BUSY_MSG = "There is already a conversion or analizing task running, please try later.";
         private void _Confirm_loosing_conv(object form)
         {
             if (MessageBox.Show("Conversion in progress will be lost. Continue?", "Analizer", MessageBoxButtons.OKCancel) == DialogResult.OK)
@@ -74,7 +75,56 @@ namespace HFO_ENGINE
                 AbrirFormHija(form);
             }
         }
-        
+        private bool _CanRunWith(AnalizerParams args)
+        {
+
+            //TRC file
+            if (string.IsNullOrEmpty(args.TrcFile))
+            {
+                MessageBox.Show("Please pick a TRC file to analize in the EEG menu.");
+                return false;
+            }
+
+            //Montage names
+            if (!Program.Controller.GetMontageNames().Contains(args.SuggestedMontage) ||
+                !Program.Controller.GetMontageNames().Contains(args.BipolarMontage))
+            {
+                MessageBox.Show("Please set the montages in Montage menu.");
+                return false;
+            }
+
+            //Time window
+            if (args.StartTime < 0 ||
+                args.StopTime <= args.StartTime ||
+                args.StopTime > Program.Controller.GetTrcDuration())
+            {
+                MessageBox.Show("Please set your Time-window settings in Time-Window menu.");
+                return false;
+            }
+
+            //Cycle time
+            if (args.CycleTime == 0)
+            {
+                Program.Controller.SetCycleTime(false, 0); //tells the controller that we are not running in parallel if cycle_time wasn't setted
+            }
+
+            //Evt file directory
+            if (string.IsNullOrEmpty(args.EvtFile))
+            {
+                MessageBox.Show("Please set the evt saving path from the Output menu.");
+                return false;
+            }
+
+            //Evt file name
+            if (string.IsNullOrEmpty(Path.GetFileNameWithoutExtension(args.EvtFile))) //Covers default evt fname using trc fname
+            {
+                string evt_dir = Path.GetDirectoryName(args.EvtFile);
+                string evt_fname = Path.GetFileNameWithoutExtension(args.TrcFile) + ".evt";
+                Program.Controller.SetEvtFile(evt_dir, evt_fname);
+            }
+
+            return true;
+        }
         //Children Forms buttons
         public void AbrirFormHija(object formhija) {
             if (panelContenedor.InvokeRequired)
@@ -93,6 +143,12 @@ namespace HFO_ENGINE
                 this.panelContenedor.Tag = fh;
                 fh.Show();
             }
+        }
+
+        private void Convert_btn_Click(object sender, EventArgs e)
+        {
+            if (Program.Controller.IsBusy()) MessageBox.Show(IS_BUSY_MSG);
+            else AbrirFormHija(Program.Controller.GetScreen_Conv_1());
         }
 
         private void BtnEEG_Click(object sender, EventArgs e) {
@@ -131,63 +187,36 @@ namespace HFO_ENGINE
             if (Program.Controller.IsConverting()) _Confirm_loosing_conv(Program.Controller.GetScreen_Settings());
             else AbrirFormHija(Program.Controller.GetScreen_Settings());
         }
-
+         
         private void StartBtn_Click(object sender, EventArgs e) {
-            var c = Program.Controller;
 
-            if (Program.Controller.IsAnalizing()) AbrirFormHija(Program.Controller.GetScreen_AnalizerProgress());
-            else {
+            //If it's already analizing just open the current progress screen
+            if (Program.Controller.IsAnalizing()) {
+                AbrirFormHija(Program.Controller.GetScreen_AnalizerProgress());
+                return;
+            } 
 
-                if (Program.Controller.IsConverting()) {
-                    if (MessageBox.Show("Conversion in progress will be lost. Continue?", "Analizer",
-                        MessageBoxButtons.OKCancel) != DialogResult.OK) return;
-                    else Program.Controller.SetConvFlag(false);
-                }
+            //If it's converting decide to wait or continue but loosing conversion
+            if (Program.Controller.IsConverting()) {
+                if (MessageBox.Show("Conversion in progress will be lost. Continue?", "Analizer",
+                    MessageBoxButtons.OKCancel) != DialogResult.OK) return;
+                else Program.Controller.SetConvFlag(false);
+            }
+            //At this point we know that the controller is not busy
 
-                AnalizerParams args = Program.Controller.GetAnalizerParams();
+            //Validate API is setted
+            if (string.IsNullOrEmpty(Program.Controller.GetAPI().Hostname) ||
+                string.IsNullOrEmpty(Program.Controller.GetAPI().Port))
+            {
+                MessageBox.Show("Please set the API settings in Advanced settings menu.");
+                return;
+            }
 
-                //Check that all params have been setted by the user
-                if (string.IsNullOrEmpty(args.TrcFile))
-                {
-                    MessageBox.Show("Please pick a TRC file to analize in the EEG menu.");
-                }
-                else if( !c.GetMontageNames().Contains(args.SuggestedMontage) || 
-                            !c.GetMontageNames().Contains(args.BipolarMontage) )
-                {
-                    MessageBox.Show("Please set the montages in Montage menu.");
-                }
-                else if (args.StartTime < 0 || args.StopTime <= args.StartTime || args.StopTime > c.GetTrcDuration()) {
-                    MessageBox.Show("Please set your Time-window settings in Time-Window menu.");
-                }
-                else if (args.CycleTime == 0) {
-                    Program.Controller.SetCycleTime(false, 0); //tells the controller that we are not running in parallel if cycle_time wasn't setted
-                }
-                else if (string.IsNullOrEmpty(args.EvtFile))
-                {
-                    MessageBox.Show("Please set the evt saving path from the Output menu.");
-                }
-                else if (string.IsNullOrEmpty(Path.GetFileNameWithoutExtension(args.EvtFile))) //Cover default evt fname using trc fname
-                {
-                    string evt_dir = Path.GetDirectoryName(args.EvtFile);
-                    string evt_fname = Path.GetFileNameWithoutExtension(args.TrcFile) + ".evt";
-                    Program.Controller.SetEvtFile(evt_dir, evt_fname);
-                }
-                else if (string.IsNullOrEmpty(Program.Controller.GetAPI().Hostname) ||
-                            string.IsNullOrEmpty(Program.Controller.GetAPI().Port))
-                {
-                    MessageBox.Show("Please set the API settings in Advanced settings menu.");
-                }
-                else
-                {
-                    Program.Controller.RunHFOAnalizer(); //From now on we know we are working with valid params.
-                }
+            AnalizerParams args = Program.Controller.GetAnalizerParams();
+
+            if (this._CanRunWith(args)) {
+                Program.Controller.RunHFOAnalizer();
             }
         }
-        private void Convert_btn_Click(object sender, EventArgs e)
-        {
-            if (Program.Controller.IsBusy()) MessageBox.Show("There is already a conversion or analizing task running, please try later.");
-            else AbrirFormHija(Program.Controller.GetScreen_Conv_1());
-        }
-
     }
 }
