@@ -88,7 +88,7 @@
             this.browse_trc_out_dir.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.browse_trc_out_dir.TabIndex = 41;
             this.browse_trc_out_dir.TabStop = false;
-            this.browse_trc_out_dir.Click += new System.EventHandler(this.browse_trc_out_dir_Click_1);
+            this.browse_trc_out_dir.Click += new System.EventHandler(this.Browse_trc_out_dir_Click_1);
             // 
             // SavingConvTrcDir
             // 

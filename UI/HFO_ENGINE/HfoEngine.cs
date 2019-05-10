@@ -18,11 +18,6 @@ using HFO_ENGINE;
 using Newtonsoft.Json.Converters;
 using System.ComponentModel;
 
-//TODO
-
-//Debug Conversor
-//Debug analizer
-
 namespace HFO_ENGINE
 {
     //Classes
@@ -223,13 +218,15 @@ namespace HFO_ENGINE
         {
             //Analizer call
             string uri_run = this.GetAPI().URI() + "hfo_analizer";
-            Dictionary<string, string> Params = new Dictionary<string, string>();
-            Params.Add("trc_fname", Path.GetFileName(args.TrcFile));
-            Params.Add("str_time", args.StartTime.ToString());
-            Params.Add("stp_time", args.StopTime.ToString());
-            Params.Add("cycle_time", args.CycleTime.ToString());
-            Params.Add("sug_montage", args.SuggestedMontage);
-            Params.Add("bp_montage", args.BipolarMontage);
+            Dictionary<string, string> Params = new Dictionary<string, string>
+            {
+                { "trc_fname", Path.GetFileName(args.TrcFile) },
+                { "str_time", args.StartTime.ToString() },
+                { "stp_time", args.StopTime.ToString() },
+                { "cycle_time", args.CycleTime.ToString() },
+                { "sug_montage", args.SuggestedMontage },
+                { "bp_montage", args.BipolarMontage }
+            };
             string serialized_params = JsonConvert.SerializeObject(Params, new KeyValuePairConverter());
 
             this.Log(String.Format("Analisis request with params: {0},{1},{2},{3},{4},{5}",
@@ -345,7 +342,7 @@ namespace HFO_ENGINE
                     } while (progress < 100);
                     this.Log("Conversion completed.");
 
-                    string basename = Path.GetFileNameWithoutExtension(GetConvParams().edf_fname);
+                    string basename = Path.GetFileNameWithoutExtension(GetConvParams().Edf_fname);
                     string remote_trc_fname = basename + ".TRC";
                     string trc_saving_path = trc_saving_dir + remote_trc_fname;
                     this.DownloadTRC(remote_trc_fname, trc_saving_path);
@@ -544,12 +541,12 @@ namespace HFO_ENGINE
     class ConversionParams{
         //Constructor
         public ConversionParams(string edf_filename, Dictionary<String, String> _suggested_mapping) {
-            edf_fname = edf_filename;
+            Edf_fname = edf_filename;
             ch_names_mapping = _suggested_mapping;
         }
 
         //Colaborators
-        public string edf_fname { get; set; }
+        public string Edf_fname { get; set; }
         public Dictionary<string,string> ch_names_mapping { get; set; }
 
     }

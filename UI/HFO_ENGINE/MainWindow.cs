@@ -26,33 +26,32 @@ namespace HFO_ENGINE
         public MainWindow(){
             InitializeComponent();
         }
-        private delegate void SafeCallDelegate(object formhija);
 
         //Buttons events
         private void Stack_menu_btn_Click(object sender, EventArgs e)
         {
             Stack_menu.Visible = !Stack_menu.Visible;
         }
-        private void btnCerrar_Click(object sender, EventArgs e)
+        private void BtnCerrar_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("Do you really want to Quit?", "Exit", MessageBoxButtons.OKCancel) == DialogResult.OK)
             {
                 Application.Exit();
             }
         }
-        private void btnMaximizar_Click(object sender, EventArgs e)
+        private void BtnMaximizar_Click(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Maximized;
             btnMaximizar.Visible = false;
             btnRestaurar.Visible = true;
         }
-        private void btnRestaurar_Click(object sender, EventArgs e)
+        private void BtnRestaurar_Click(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Normal;
             btnRestaurar.Visible = false;
             btnMaximizar.Visible = true;
         }
-        private void btnMinimizar_Click(object sender, EventArgs e)
+        private void BtnMinimizar_Click(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Minimized;
         }
@@ -126,6 +125,7 @@ namespace HFO_ENGINE
             return true;
         }
         //Children Forms buttons
+        private delegate void SafeCallDelegate(object formhija);
         public void AbrirFormHija(object formhija) {
             if (panelContenedor.InvokeRequired)
             {
