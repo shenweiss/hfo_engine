@@ -2,7 +2,7 @@
 where=$1
 init_db=$2
 
-source venv/bin/activate
+pyenv activate shennan
 
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
