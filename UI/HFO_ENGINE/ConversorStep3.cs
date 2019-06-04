@@ -22,7 +22,7 @@ namespace HFO_ENGINE
 
         //Colaborators
         private string EdfFile(){
-            return Program.Controller.GetConvParams().Edf_fname;
+            return Program.Controller.GetConvParams().edf_fname;
         }
         public event PropertyChangedEventHandler PropertyChanged;
         private int _Progress;

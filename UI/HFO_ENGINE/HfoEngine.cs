@@ -342,7 +342,7 @@ namespace HFO_ENGINE
                     } while (progress < 100);
                     this.Log("Conversion completed.");
 
-                    string basename = Path.GetFileNameWithoutExtension(GetConvParams().Edf_fname);
+                    string basename = Path.GetFileNameWithoutExtension(GetConvParams().edf_fname);
                     string remote_trc_fname = basename + ".TRC";
                     string trc_saving_path = trc_saving_dir + remote_trc_fname;
                     this.DownloadTRC(remote_trc_fname, trc_saving_path);
@@ -541,12 +541,12 @@ namespace HFO_ENGINE
     class ConversionParams{
         //Constructor
         public ConversionParams(string edf_filename, Dictionary<String, String> _suggested_mapping) {
-            Edf_fname = edf_filename;
+            edf_fname = edf_filename;
             ch_names_mapping = _suggested_mapping;
         }
 
         //Colaborators
-        public string Edf_fname { get; set; }
+        public string edf_fname { get; set; }
         public Dictionary<string,string> ch_names_mapping { get; set; }
 
     }
