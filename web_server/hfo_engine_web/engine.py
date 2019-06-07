@@ -1,436 +1,184 @@
+import os
+import uuid
+from ctypes import c_char_p
+from multiprocessing import Process, Value, Manager
+
+from ez_detect.config import ProgressNotifier
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, send_from_directory, current_app, jsonify
+    Blueprint, render_template,
+    current_app, jsonify
 )
-from werkzeug.exceptions import abort
+from flask_api import status
 from werkzeug.utils import secure_filename
 
-from hfo_engine_web.db import get_db
+engine_bp = Blueprint('engine', __name__)
 
-import mne
-from trcio import read_raw_trc, write_raw_trc
-from ez_detect import config, hfo_annotate
-from ez_detect.config import ProgressNotifier
 
-from multiprocessing import Process, Value
-import ctypes
-import os
-from pathlib import Path
-import uuid
+#            API             #
 
-OK = 200
-CREATED = 201
-CONFLICT = 409
-NOT_FOUND = 404
-SERVER_ERROR = 500
 
-bp = Blueprint('engine', __name__)
-
-@bp.route('/')
+@engine_bp.route('/')
 def index():
     return jsonify(message='Welcome to FastWaveLLC HFO engine')
 
-@bp.route('/upload', methods=['GET', 'POST'])
-def upload_file():
+
+@engine_bp.route('/task_state/<uuid:pid>', methods=['GET'])
+def task_state(job_id):
+    job_id = str(job_id)
+    state = current_app.config['JOB_MANAGER'].get_state(job_id)
+
+    return (
+        jsonify(progress=state['progress'],
+                error_msg=state['error_msg'].decode('utf-8')),
+        state['status_code']
+    )
+
+
+###############################
+
+#        SHARED LOGIC         #
+
+EDF_EXTENSION = 'edf'
+TRC_EXTENSION = 'TRC'
+
+
+def is_allowed_file(filename):
+    return '.' in filename and \
+           file_extension(filename) in {EDF_EXTENSION, TRC_EXTENSION}
+
+
+def get_saving_fname(fname):
+    if file_extension(fname) == EDF_EXTENSION:
+        return os.path.join(current_app.config['EDF_FOLDER'], fname)
+    elif file_extension(fname) == TRC_EXTENSION:
+        return os.path.join(current_app.config['TRC_FOLDER'], fname)
+
+
+def file_extension(filename):
+    try:
+        return filename.rsplit('.', 1)[1]
+    except IndexError:
+        raise ValueError('There is no extension in filename ' + filename)
+
+
+def upload_file(request):
     if request.method == 'POST':
-        validated = current_app.config['validator'].validateUpload(request)
-        
-        if 'error_msg' in validated.keys():
-            status_code = validated['status_code']
-            del validated['status_code']
-            return jsonify(validated), status_code 
-        elif 'redirect_url' in validated.keys():
-            flash(validated['flash_msg'])
-            return redirect(validated['redirect_url'])
 
-        validated_filename = validated['validated_fname']
+        if 'file' not in request.files or request.files['file'] is None:
+            return jsonify(error_msg="Request has no file part."), \
+                   status.HTTP_400_BAD_REQUEST
+
         file = request.files['file']
-        if file_extention(validated_filename) == 'edf':
-            abs_fname = os.path.join(current_app.config['EDF_FOLDER'], validated_filename)
-        elif file_extention(validated_filename) == 'TRC':
-            abs_fname = os.path.join(current_app.config['TRC_FOLDER'], validated_filename)
 
-        file.save(abs_fname)
-        return jsonify(message = "Successful upload."), CREATED
+        if is_allowed_file(file.filename):
+            fname = secure_filename(file.filename)
+            abs_fname = get_saving_fname(fname)
+            file.save(abs_fname)
+            return jsonify(message="Successful upload."), status.HTTP_201_CREATED
+
+        else:
+            return jsonify(error_msg='This file extension is not allowed.'), \
+                   status.HTTP_409_CONFLICT
 
     elif request.method == 'GET':
         return render_template('engine/upload.html')
 
-@bp.route('/task_state/<uuid:pid>')
-def task_state(pid):
-    pid = str(pid)
-    if pid in current_app.config['task_state'].keys():
 
-        progress = current_app.config['task_state'][pid].progress.get()
-        error_msg= current_app.config['task_state'][pid].error_msg.value
-        status_code = current_app.config['task_state'][pid].status_code.value
+#######################################
 
-        is_finished = status_code != OK or progress >= 100
-        
-        if is_finished:
-            del current_app.config['task_state'][pid]
-        
-        return (jsonify(progress = progress, 
-                        error_msg= error_msg.decode('utf-8')),
-                        status_code)
+#       Async task management         #
 
-    else:   
-        return (jsonify(error_msg="There is not an active job with that id."), 
-                NOT_FOUND)
+class JobManager:
 
-#Analizer
+    def __init__(self, max_jobs):
+        self.jobs = dict()  # UUID.HEX : TaskState
+        self.analizer_job_count = AtomicCounter(min_value=0, max_value=max_jobs)
 
-@bp.route('/trc_info/<path:trc_fname>')
-def trc_info(trc_fname):
-    validated_filename = current_app.config['validator'].validateFilename(trc_fname)
-    abs_trc_fname = os.path.join(current_app.config['TRC_FOLDER'], validated_filename)
-    raw_trc = read_raw_trc(abs_trc_fname, preload=False)
-    return jsonify( montage_names = montage_names(raw_trc),
-                    recording_len_snds = str(duration_snds(raw_trc)) )
+    def get_state(self, job_id):
+        if job_id in self.jobs.keys():
+            progress = self.jobs[job_id].progress.get()
+            error_msg = self.jobs[job_id].error_msg.value
+            status_code = self.jobs[job_id].status_code.value
 
-@bp.route( ('/hfo_analizer'), methods=['POST'])
-def run_hfo_engine():
-    
-    validated = current_app.config['validator'].validateRun(request, current_app.config['TRC_FOLDER'])
-    
-    if 'error_msg' in validated.keys():
-        status_code = validated['status_code']
-        del validated['status_code']
-        return jsonify(validated), status_code 
+            is_finished = progress >= 100 or status_code != status.HTTP_200_OK
 
-    pid = str(uuid.uuid4())
-    current_app.config['task_state'][pid] = TaskState( progress = ProgressNotifier(),
-                                                       error_msg = Value(ctypes.c_char_p, "".encode('utf-8')),
-                                                       status_code = Value('i', OK))
+            if is_finished:
+                del self.jobs[job_id]
 
-    p = Process(target=hfo_annotate_task, args=(validated['abs_trc_fname'],
-                                                validated['abs_evt_fname'],
-                                                validated['str_time'],
-                                                validated['stp_time'],
-                                                validated['cycle_time'],
-                                                validated['sug_montage'],
-                                                validated['bp_montage'],
-                                                current_app.config['task_state'][pid],
-                                                current_app.config['JOBS_COUNT']
-                                               ))
-    p.start()
+            return dict(
+                progress=progress,
+                error_msg=error_msg,
+                status_code=status_code
+            )
+        else:
+            return dict(
+                progress=0,
+                error_msg="There is not an active job with that id.",
+                status_code=status.HTTP_404_NOT_FOUND
+            )
 
-    return jsonify(task_id=pid)
+    def create_conversion_job(self, edf_fname, ch_names_mapping, conversion_procedure):
+        # Precondition: Params have been validated
+        job_id = str(uuid.uuid4())
+        job_state = TaskState()
+        self.jobs[job_id] = job_state
+        p = Process(target=conversion_procedure,
+                    args=(edf_fname, ch_names_mapping, job_state))
+        p.start()
 
-@bp.route('/download/evts/<path:filename>')
-def download_evt_file(filename):
-    validated_fname = current_app.config['validator'].validateEvtDownload(filename)
-    return send_from_directory( current_app.config['EVT_FOLDER'], validated_fname)
+        return job_id
 
-#Conversor
+    def create_analysis_job(self, trc_fname, evt_fname, str_time, stp_time,
+                            cycle_time, sug_montage, bp_montage, analysis_procedure):
+        # Precondition: Params have been validated
+        self.analizer_job_count.increment()
+        job_id = str(uuid.uuid4())
+        job_state = TaskState()
+        self.jobs[job_id] = job_state
 
-@bp.route('/edf_suggested_ch_map/<path:edf_fname>')
-def edf_suggested_ch_map(edf_fname):
-    validated_filename = current_app.config['validator'].validateFilename(edf_fname)
-    abs_edf_fname = os.path.join(current_app.config['EDF_FOLDER'], validated_filename)
-    return jsonify(suggested_mapping = suggested_trc_ch_names(abs_edf_fname))
+        p = Process(target=analysis_procedure, args=(trc_fname,
+                                                     evt_fname,
+                                                     str_time,
+                                                     stp_time,
+                                                     cycle_time,
+                                                     sug_montage,
+                                                     bp_montage,
+                                                     job_state,
+                                                     self))
+        p.start()
 
-@bp.route('/edf_to_trc', methods=['POST'])
-def edf_to_trc():
-    validated = current_app.config['validator'].validateEDFToTRC_Step1(request, current_app.config['EDF_FOLDER'])
-    
-    if 'error_msg' in validated.keys():
-        status_code = validated['status_code']
-        del validated['status_code']
-        return jsonify(validated), status_code 
-    
-    pid = str(uuid.uuid4())
-    current_app.config['task_state'][pid] = TaskState( 
-                                                       progress = ProgressNotifier(),
-                                                       error_msg = Value(ctypes.c_char_p, "".encode('utf-8')),
-                                                       status_code = Value('i', OK)
-                                                     )
+        return job_id
 
-    p = Process(target=edf_to_trc_task, args=( validated['edf_path'],
-                                               validated['ch_names_mapping'],
-                                               current_app.config['TRC_FOLDER'],
-                                               current_app.config['validator'],
-                                               current_app.config['task_state'][pid])
-                                              )
-    p.start()
+    def on_analysis_finished(self):
+        self.analizer_job_count.decrement()
 
-    return jsonify(task_id=pid)
-
-@bp.route('/download/TRCs/<path:filename>')
-def download_trc_file(filename):
-    validated_fname = current_app.config['validator'].validateTRCDownload(filename)
-    return send_from_directory( current_app.config['TRC_FOLDER'], validated_fname)
-
-
-#LOGIC CLASSES
 
 class TaskState:
-    def __init__(self, progress, error_msg, status_code):
-        self.progress = progress
-        self.error_msg = error_msg
-        self.status_code = status_code
+
+    def __init__(self):
+        manager = Manager()
+        self.progress = ProgressNotifier()
+        self.error_msg = manager.Value(c_char_p, "".encode('utf-8'))
+        self.status_code = Value('i', status.HTTP_200_OK)
+
 
 class AtomicCounter(object):
-    def __init__(self, init_value=0, min_value=0,  max_value=10):
-        self.counter = Value('i', init_value)
+
+    def __init__(self, min_value=0, max_value=10):
+        self.counter = Value('i', 0)
         self.min_value = min_value
         self.max_value = max_value
 
     def get(self):
         with self.counter.get_lock():
             return self.counter.value
-    def delete(self):
-        with self.counter.get_lock():
-            del self.counter
 
     def increment(self):
         with self.counter.get_lock():
-            assert(self.counter.value < self.max_value)
+            assert (self.counter.value < self.max_value)
             self.counter.value += 1
 
     def decrement(self):
         with self.counter.get_lock():
-            assert(self.counter.value > self.min_value)
+            assert (self.counter.value > self.min_value)
             self.counter.value -= 1
-
-    def update(self, val):
-        with self.counter.get_lock():
-            assert(self.min_value <= val and val <= self.max_value)
-            self.counter.value = val
-
-class Validator:
-    def __init_(self):
-        pass
-
-    def validateFilename(self, filename):
-        return secure_filename(filename)
-
-    def validateUpload(self, request):
-        if 'file' not in request.files:
-            flash('No file part')
-            return {'redirect_url':request.url,
-                    'flash_msg': 'No file part'}
-        
-        file = request.files['file']
-        
-        if file.filename == '':
-            return {'redirect':request.url,
-                    'flash_msg': 'No selected file'}
-        
-        try:
-            if file and allowed_file(file.filename):
-                pass
-        except ValueError:
-            return {'error_msg':'The filename has not an allowed extention', 
-                    'status_code':CONFLICT}
-
-        return {'validated_fname': secure_filename(file.filename)}
-
-    #Analizer
-
-    def validateRun(self, request, trc_directory):
-    
-        #Check resources availability
-        try:
-            current_app.config['JOBS_COUNT'].increment()
-        except AssertionError:
-            return {'error_msg':'The server has reached the maximum active jobs. Try again later.', 
-                    'status_code':CONFLICT}
-
-        content = request.get_json(silent=True)
-
-        #check file exists
-        abs_trc_fname = os.path.join(trc_directory, content['trc_fname'])
-        try:
-            abs_trc_fname = str(Path(abs_trc_fname).resolve())
-        except FileNotFoundError:
-            return {'error_msg' : 'You must upload the TRC prior to running hfo_engine on it.', 
-                    'status_code' : NOT_FOUND}
-
-        raw_trc = read_raw_trc(abs_trc_fname, preload=False)
-        str_time = int(content['str_time'])
-        stp_time = int(content['stp_time'])
-        
-        if str_time < 0 or stp_time < str_time:
-            return {'error_msg':"Start time is incorrect for the current trc.", 
-                    'status_code':CONFLICT}
-        elif stp_time > duration_snds(raw_trc):
-            return {'error_msg':"Stop time is greater than current trc duration.", 
-                    'status_code' : CONFLICT}
-        elif content['sug_montage'] not in montage_names(raw_trc):
-            return {'error_msg':"Suggested montage is not an option for current TRC file.", 
-                    'status_code' : CONFLICT}
-        elif content['bp_montage'] not in montage_names(raw_trc):
-            return {'error_msg':"Bipolar montage is not an option for current TRC file.",
-                    'status_code' : CONFLICT}
-       
-        evt_fname = Path(content['trc_fname']).stem + '.evt'
-        abs_evt_fname = os.path.join(current_app.config['EVT_FOLDER'], evt_fname)
-
-        return {
-                'abs_trc_fname': abs_trc_fname, 
-                'abs_evt_fname' : abs_evt_fname, 
-                'str_time'      : str_time,
-                'stp_time'      : stp_time,
-                'cycle_time'    : int(content['cycle_time']), 
-                'sug_montage'   : content['sug_montage'], 
-                'bp_montage'    : content['bp_montage']
-               }
-
-    def validateEvtDownload(self, filename):
-        return secure_filename(filename)
-
-    #Conversor
-
-    def validateEDFToTRC_Step1(self, request, directory ):
-
-        content = request.get_json(silent=True)
-        edf_fname = content['edf_fname']
-        edf_path = Path(directory, edf_fname)
-        try:
-            edf_path = edf_path.resolve() #Checks edf exist
-        except FileNotFoundError:
-            return { 'error_msg':"You must upload the edf prior to do the convertion.",
-                     'status_code' : NOT_FOUND
-                   } 
-
-        return {'edf_path': edf_path,
-                'ch_names_mapping': content['ch_names_mapping']
-                }
-    
-    def validateEDFToTRC_Step2(self, ch_names_translation, edf_ch_names, task_state):
-        #Check the ch_name list is valid
-        if set(ch_names_translation.keys()) != set(edf_ch_names):
-            task_state.error_msg.value =("The provided ch_names_mapping must have a definition" 
-                                             " for (and only for) every channel name in the edf.") 
-            task_state.status_code = CONFLICT
-
-        #Check the final ch_name list is valid
-        #All diferent 
-        if len(set(ch_names_translation.values())) != len(list(ch_names_translation.values())): 
-            task_state.error_msg.value ="The final ch_name list has repetead values."
-            task_state.status_code = CONFLICT
-        
-        #Length is correct
-        TRC_MAX_CH_NAME_LEN = 5
-        for long_name, short_name in ch_names_translation.items():
-            if len(short_name) > TRC_MAX_CH_NAME_LEN:
-                task_state.error_msg.value = ("TRC channel names length must be less or"
-                                                  " equal to {}.".format(TRC_MAX_CH_NAME_LEN)) 
-                task_state.status_code =CONFLICT
-
-    def validateTRCDownload(self, filename):
-        return secure_filename(filename)
-    
-
-######### AUX FUNCTIONS ###########
-
-ALLOWED_EXTENSIONS = set(['edf', 'TRC'])
-
-def allowed_file(filename):
-    return '.' in filename and \
-           file_extention(filename) in ALLOWED_EXTENSIONS
-
-def file_extention(filename):
-    try:
-        return filename.rsplit('.', 1)[1]
-    except IndexError:
-        raise ValueError('There is not extention in filename ' + filename)
-    
-#Analizer
-
-def montage_names(raw_trc):
-    return list(raw_trc._raw_extras[0]['montages'].keys())
-
-def duration_snds(raw_trc):
-    return raw_trc._raw_extras[0]['n_samples'] // raw_trc._raw_extras[0]['sfreq']
-
-
-def hfo_annotate_task(abs_trc_fname, abs_evt_fname, str_time, stp_time, cycle_time, 
-                      sug_montage, bp_montage, task_state, jobs_count):
-    task_state.progress.update(0)
-    #task_state.error_msg.value = "testing".encode('utf-8') 
-
-    paths = config.getAllPaths(abs_trc_fname, 
-                               abs_evt_fname)
-    config.clean_previous_execution()
-    try:
-        hfo_annotate(paths, str_time, stp_time, cycle_time, 
-                     sug_montage, bp_montage, progress_notifier=task_state.progress) 
-        with task_state.status_code.get_lock():
-            task_state.status_code.value = CREATED
-    except Exception as e:
-        with task_state.error_msg.get_lock():
-            task_state.error_msg.value = e.message.encode('utf-8') #no anda bien el encoding
-        with task_state.status_code.get_lock():
-            task_state.status_code.value = SERVER_ERROR
-    finally: 
-        jobs_count.decrement()
-
-    
-#Conversor
-
-def suggested_trc_ch_names(edf_fname):
-    
-    def suggested_translation(ch_name, known_translation):
-        if ch_name in known_translation.keys():
-            return known_translation[ch_name]
-        else:
-            return ch_name[-5:]
-
-    raw_edf = mne.io.read_raw_edf(edf_fname, preload=True)
-    raw_edf.pick_types(eeg=True, stim=False)
-    translation = dict()
-    db = get_db()
-    rows = db.execute('SELECT * FROM ch_name_translation').fetchall()
-    known_translation = {translation['long_name']:translation['short_name'] for translation in rows}
-    for ch_name in raw_edf.ch_names:
-        translation[ch_name] = suggested_translation(ch_name, known_translation)
-    return translation
-
-def edf_to_trc_task(edf_path, ch_names_translation, saving_directory, validator, task_state):
-    try:
-        task_state.progress.update(5)
-        raw_edf = mne.io.read_raw_edf( str(edf_path), preload=True)
-        task_state.progress.update(10)
-        raw_edf.pick_types(eeg=True, stim=False)
-        validator.validateEDFToTRC_Step2(ch_names_translation, raw_edf.ch_names, task_state)
-        task_state.progress.update(20)
-
-        # If data comes in microvolts, this information is stored 
-        # in the info dict in the unit_mul entry as -6. If it is volt, then it is stored as 1.
-        #info['chs'][0]['unit'] info['chs'][0]['unit_mul']
-        #to_rename = {x: x.split(' ')[1].split('-')[0] for x in raw_edf.ch_names}
-        raw_edf._data *= 1e-06 #From microvolts to volts
-        task_state.progress.update(30)
-
-        to_rename = {long:short for long,short in ch_names_translation.items() if long != short}
-        raw_edf.rename_channels(to_rename)
-        task_state.progress.update(40)
-
-        db = get_db()
-        for long, short in to_rename.items():
-            db.execute(
-                        'REPLACE INTO ch_name_translation'
-                        ' VALUES (?,?)', 
-                        (long, short)
-                      )
-        db.commit()
-        task_state.progress.update(50)
-        trc_fname = edf_path.stem + '.TRC'
-        abs_trc_fname = os.path.join(saving_directory, trc_fname)
-        write_raw_trc(raw_edf, abs_trc_fname)
-
-        task_state.progress.update(100)
-        task_state.status_code.value = CREATED
-
-    except Exception as e:
-        task_state.error_msg.value = e.message.encode('utf-8') #no anda bien el encoding
-        task_state.status_code.value = SERVER_ERROR
-    
-
-if __name__ == "__main__":
-    #Test
-    paths = config.getAllPaths("/home/tpastore/hfo_engine/web_server/instance/TRCs/test.TRC", 
-                               "/home/tpastore/hfo_engine/web_server/instance/evts/testAnalizer.evt")
-    config.clean_previous_execution()
-    hfo_annotate(paths, 0, 600, 600, "Suggested", "Bipolar", progress_notifier=ProgressNotifier()) 

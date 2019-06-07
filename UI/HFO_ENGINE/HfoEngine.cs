@@ -22,19 +22,19 @@ namespace HFO_ENGINE
 {
     //Classes
     static class Program {
-        
+
         //Colaborators
-        public static Controller Controller { get; set; } 
+        public static Controller Controller { get; set; }
 
         //Methods
         public static string MainDir() { return AppDomain.CurrentDomain.BaseDirectory.Replace("\\", "/"); }
-        
+
         [STAThread]
         static void Main(string[] args){
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Controller = new Controller();
-            Controller.Init(args);        
+            Controller.Init(args);
         }
 
     }
@@ -47,18 +47,18 @@ namespace HFO_ENGINE
 
         //Collaborators
         private Model Model { get; set; }
-        
+
         //************ Methods **************//
         public void Init(string[] args) {
             //Command line parsing
             Parser.Default.ParseArguments<Options>(args)
             .WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts))
             .WithNotParsed<Options>((errs) => HandleParseError(errs));
-            
+
             Application.Run(this.GetScreen_Home());
         }
 
-        //Getters of the model  
+        //Getters of the model
         public API GetAPI() { return this.Model.API; }
         public AnalizerParams GetAnalizerParams() { return this.Model.AnalizerParams; }
         public ConversionParams GetConvParams() { return this.Model.ConversionParams; }
@@ -139,7 +139,7 @@ namespace HFO_ENGINE
                 this.Model.API.Port = port;
                 this.Model.LogFile = log_file;
                 this.Model.TRCTempDir =  trc_temp_dir;
-                this.Log(String.Format("Setting advanced parameters {0} {1}, {2}, {3}", 
+                this.Log(String.Format("Setting advanced parameters {0} {1}, {2}, {3}",
                         hostname, port, log_file, trc_temp_dir));
 
             }
@@ -168,7 +168,7 @@ namespace HFO_ENGINE
             webClient.UploadFileCompleted += WebClientUploadCompleted;
             webClient.UploadFileAsync(new Uri(uri_upload), this.GetTRCTempPath(trc_fname));
             //Program.Controller.SetTrcMetadata(trc_fname); // mock if trc is already uploaded
-        } 
+        }
         private void SetTrcMetadata(string trc_fname)
         {
             this.Log("Setting TRC metadata");
@@ -179,7 +179,6 @@ namespace HFO_ENGINE
             this.GetScreen_Montage().LoadMontages(trc_info.montage_names);
             this.Model.TrcDuration = trc_info.recording_len_snds;
             this.GetScreen_TimeWindow().SetTRCDuration(trc_info.recording_len_snds);
-            
         }
         public bool IsMetadataSetted() { return this.GetTrcDuration() != 0; }
         public void RunHFOAnalizer()
@@ -306,7 +305,6 @@ namespace HFO_ENGINE
             string suggestion_response = this.GetJsonSync(uri_suggestion);
             SuggestionResponse suggestion_response_dict = JsonConvert.DeserializeObject<SuggestionResponse>(suggestion_response);
             return suggestion_response_dict.suggested_mapping;
-           
         }
         public void ConfirmChMapping( Dictionary<string, string> ch_translations)
         {
@@ -314,7 +312,7 @@ namespace HFO_ENGINE
             this.Model.ConvScreen_3 = new ConversorStep3();
             this.GetScreen_Home().AbrirFormHija(this.GetScreen_Conv_3());
         }
-        public void ConvertEdf(string trc_saving_dir) 
+        public void ConvertEdf(string trc_saving_dir)
         {
             this.GetScreen_Conv_3().UpdateProgressDescSafe("Performing conversion in remote server...");
             this.GetScreen_Conv_3().UpdateProgressSafe(5);
@@ -351,7 +349,6 @@ namespace HFO_ENGINE
                 }
             );
             conversion.Start();
-           
         }
         public void DownloadTRC(string remote_trc_fname, string trc_saving_path)
         {
@@ -398,7 +395,6 @@ namespace HFO_ENGINE
                 this.Model.AnalizerParams.EvtFile = (opts.EvtFile).Replace("\\", "/");
                 this.GetScreen_Evt().SetEvtFile( GetAnalizerParams().EvtFile);
             }
-            
         }
         private void HandleParseError(IEnumerable<Error> errs)
         {
@@ -444,8 +440,7 @@ namespace HFO_ENGINE
                 }
             }
         }
-        
-    } 
+    }
 
     class Model {
         //Constructor
@@ -459,7 +454,7 @@ namespace HFO_ENGINE
             this.LogFile = Program.MainDir() + "logs/ez_detect_gui_log.txt";
             this.TRCTempDir = Program.MainDir() + "temp/";
 
-            //Build screens 
+            //Build screens
             this.HomeScreen = new MainWindow();
             this.EEGScreen = new EEG();
             this.MontageScreen = new Montage();
@@ -513,30 +508,31 @@ namespace HFO_ENGINE
         }
 
         //Colaborators
-        public string Hostname { get; set; } 
-        public string Port { get; set; } 
+        public string Hostname { get; set; }
+        public string Port { get; set; }
         public string URI() { return "http://" + this.Hostname + ":" + this.Port + "/"; }
     }
+
     class AnalizerParams
     {
-        //Constructor 
+        //Constructor
         public AnalizerParams() {
             this.TrcFile = String.Empty;
             this.EvtFile = String.Empty;
             this.StartTime = 0;
             this.StopTime = 0;
-            this.CycleTime = 0; 
+            this.CycleTime = 0;
             this.SuggestedMontage = String.Empty;
             this.BipolarMontage = String.Empty;
         }
 
-        public string TrcFile { get; set; } 
+        public string TrcFile { get; set; }
         public string EvtFile { get; set; }
-        public int StartTime { get; set; } 
+        public int StartTime { get; set; }
         public int StopTime { get; set; }
         public int CycleTime { get; set; }
-        public string SuggestedMontage { get; set; } 
-        public string BipolarMontage { get; set; } 
+        public string SuggestedMontage { get; set; }
+        public string BipolarMontage { get; set; }
     }
     class ConversionParams{
         //Constructor
@@ -550,7 +546,6 @@ namespace HFO_ENGINE
         public Dictionary<string,string> ch_names_mapping { get; set; }
 
     }
-
     //Aux classes
     class Options
     {
