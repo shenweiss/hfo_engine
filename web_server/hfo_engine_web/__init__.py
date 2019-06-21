@@ -1,7 +1,6 @@
 import os
-
 from flask import Flask
-
+from hfo_engine_web import db, engine, analyzer, converter
 from .engine import JobManager
 
 
@@ -31,11 +30,10 @@ def create_app(test_config=None):
     app.config['EDF_FOLDER'] = EDF_FOLDER
     app.config['TRC_FOLDER'] = TRC_FOLDER
     app.config['EVT_FOLDER'] = EVT_FOLDER
-    app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 ** 3  # 5 GB
+    app.config['MAX_CONTENT_LENGTH'] = 5 * (1024 ** 3)  # 5 GB
 
     app.config['JOB_MANAGER'] = JobManager(max_jobs=MAX_ANALYZER_JOBS_RUNNING)
 
-    from . import db, engine, analyzer, converter
     db.init_app(app)
     app.register_blueprint(engine.engine_bp)
     app.register_blueprint(analyzer.analyzer_bp)

@@ -15,7 +15,7 @@ from .engine import file_extension
 TRC_EXTENSION = 'TRC'
 EVT_EXTENSION = 'evt'
 
-analyzer_bp = Blueprint('analyser', __name__, url_prefix='/analyser')
+analyzer_bp = Blueprint('analyzer', __name__, url_prefix='/analyzer')
 
 
 @analyzer_bp.route('/upload_trc', methods=['GET','POST'])
@@ -38,7 +38,7 @@ def trc_info(trc_fname):
         return jsonify(error_msg="That file does not exist."), status.HTTP_404_NOT_FOUND
 
 
-@analyzer_bp.route('/analyse', methods=['POST'])
+@analyzer_bp.route('/analyze', methods=['POST'])
 def analyze():
     content = request.get_json(silent=True)
 
@@ -85,7 +85,7 @@ def analyze():
 
     except AssertionError:
         return jsonify(error_msg=('Server has reached the maximum of posible '
-                                  'active analyser jobs, please try again later.')), \
+                                  'active analyzer jobs, please try again later.')), \
                status.HTTP_409_CONFLICT
 
 
