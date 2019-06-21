@@ -19,7 +19,7 @@ echo 'IP >' $IP
 
 if [ $where == "--production" ]
 then
-	waitress-serve --call 'hfo_engine_web:create_app'
+	waitress-serve --max-request-body-size=5368709120 --call 'hfo_engine_web:create_app'   #5GB
 else
 	export FLASK_ENV=development
 	flask run
