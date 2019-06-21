@@ -1,14 +1,16 @@
 import os
+from pathlib import Path
+
 import mne
 from flask import (
     Blueprint, request, send_from_directory,
     current_app, jsonify
 )
 from flask_api import status
-from hfo_engine_web.db import get_db
 from trcio import write_raw_trc
 from werkzeug.utils import secure_filename
-from pathlib import Path
+
+from hfo_engine_web.db import get_db
 from .engine import file_extension
 
 TRC_EXTENSION = 'TRC'
@@ -18,7 +20,7 @@ TRC_MAX_CH_NAME_LEN = 5
 converter_bp = Blueprint('converter', __name__, url_prefix='/converter')
 
 
-#            API and validations         #
+#            CONVERTER ENDPOINTS             #
 
 @converter_bp.route('/upload_edf', methods=['GET', 'POST'])
 def upload_edf():
@@ -35,12 +37,12 @@ def suggested_ch_name_mapping(edf_fname):
     if file_extension(edf_fname) == EDF_EXTENSION and file_exists:
         return jsonify(suggested_mapping=suggested_mapping(abs_edf_fname))
     else:
-        return jsonify(error_msg="That file does not exist."), status.HTTP_404_NOT_FOUND
+        return jsonify(error_msg='That file does not exist.'), status.HTTP_404_NOT_FOUND
 
 
 @converter_bp.route('/convert', methods=['POST'])
 def convert():
-    content = request.get_json(silent=True)
+    content = request.get_json()
 
     # Validate file
     edf_fname = secure_filename(content['edf_fname'])
@@ -49,7 +51,7 @@ def convert():
     if file_extension(edf_fname) == EDF_EXTENSION and file_exists:
         pass
     else:
-        return jsonify(error_msg="You must upload the edf prior to do the conversion.",
+        return jsonify(error_msg='You must upload the edf prior to do the conversion.',
                        status_code=status.HTTP_404_NOT_FOUND)
 
     # Validate ch_names_mapping
@@ -59,19 +61,19 @@ def convert():
 
     # Check the ch_name list to be renamed is valid
     if set(user_ch_names_mapping.keys()) != set(raw_edf.ch_names):
-        return jsonify(error_msg=("The provided ch_names_mapping must have a definition"
-                                  " for (and only for) every channel name in the edf.")), \
+        return jsonify(error_msg=('The provided ch_names_mapping must have a definition'
+                                  ' for (and only for) every channel name in the edf.')), \
                status.HTTP_409_CONFLICT
 
     # Check the final ch_name list is valid
     if len(set(user_ch_names_mapping.values())) != len(list(user_ch_names_mapping.values())):
-        return jsonify(error_msg="The final ch_name list has repetead values."), \
+        return jsonify(error_msg='The final ch_name list has repeated values.'), \
                status.HTTP_409_CONFLICT
 
     for long_name, short_name in user_ch_names_mapping.items():
         if len(short_name) > TRC_MAX_CH_NAME_LEN:
-            return jsonify(error_msg=("TRC channel names length must be less or"
-                                      " equal to {}.".format(TRC_MAX_CH_NAME_LEN))), \
+            return jsonify(error_msg=('TRC channel names length must be less or'
+                                      ' equal to {}.'.format(TRC_MAX_CH_NAME_LEN))), \
                    status.HTTP_409_CONFLICT
 
     # Create new conversion job
@@ -90,10 +92,10 @@ def download_trc(trc_fname):
     if file_extension(trc_fname) == TRC_EXTENSION and file_exists:
         return send_from_directory(current_app.config['TRC_FOLDER'], trc_fname)
     else:
-        return jsonify(error_msg="That file does not exist."), status.HTTP_404_NOT_FOUND
+        return jsonify(error_msg='That file does not exist.'), status.HTTP_404_NOT_FOUND
 
 
-# Main Logic
+# Converter Main Logic
 
 def suggestion_for(ch_name, known_translation):
     if ch_name in known_translation.keys():
@@ -103,7 +105,6 @@ def suggestion_for(ch_name, known_translation):
 
 
 def suggested_mapping(edf_fname):
-
     raw_edf = mne.io.read_raw_edf(edf_fname, preload=True)
     raw_edf.pick_types(eeg=True, stim=False)
     translation = dict()
@@ -154,6 +155,6 @@ def conversion_procedure(edf_fname, ch_names_translation, job_state):
 
     except Exception:
         with job_state.error_msg.get_lock():
-            job_state.error_msg.value = "There was an exception running conversion procedure".encode('utf-8')
+            job_state.error_msg.value = 'There was an exception running conversion procedure'.encode('utf-8')
         with job_state.status_code.get_lock():
             job_state.status_code.value = status.HTTP_500_INTERNAL_SERVER_ERROR

@@ -14,22 +14,21 @@ from werkzeug.utils import secure_filename
 engine_bp = Blueprint('engine', __name__)
 
 
-#            API             #
-
+#         GENERAL ENDPOINTS           #
 
 @engine_bp.route('/')
 def index():
     return jsonify(message='Welcome to FastWaveLLC HFO engine')
 
 
-@engine_bp.route('/task_state/<uuid:pid>', methods=['GET'])
+@engine_bp.route('/task_state/<uuid:job_id>', methods=['GET'])
 def task_state(job_id):
     job_id = str(job_id)
     state = current_app.config['JOB_MANAGER'].get_state(job_id)
 
     return (
         jsonify(progress=state['progress'],
-                error_msg=state['error_msg'].decode('utf-8')),
+                error_msg=state['error_msg']),
         state['status_code']
     )
 
@@ -65,7 +64,7 @@ def upload_file(request):
     if request.method == 'POST':
 
         if 'file' not in request.files or request.files['file'] is None:
-            return jsonify(error_msg="Request has no file part."), \
+            return jsonify(error_msg='Request has no file part.'), \
                    status.HTTP_400_BAD_REQUEST
 
         file = request.files['file']
@@ -92,12 +91,12 @@ class JobManager:
 
     def __init__(self, max_jobs):
         self.jobs = dict()  # UUID.HEX : TaskState
-        self.analizer_job_count = AtomicCounter(min_value=0, max_value=max_jobs)
+        self.analyzer_job_count = AtomicCounter(min_value=0, max_value=max_jobs)
 
     def get_state(self, job_id):
         if job_id in self.jobs.keys():
             progress = self.jobs[job_id].progress.get()
-            error_msg = self.jobs[job_id].error_msg.value
+            error_msg = self.jobs[job_id].error_msg.value.decode('utf-8')
             status_code = self.jobs[job_id].status_code.value
 
             is_finished = progress >= 100 or status_code != status.HTTP_200_OK
@@ -113,7 +112,7 @@ class JobManager:
         else:
             return dict(
                 progress=0,
-                error_msg="There is not an active job with that id.",
+                error_msg='There is not an active job with that id.',
                 status_code=status.HTTP_404_NOT_FOUND
             )
 
@@ -131,7 +130,7 @@ class JobManager:
     def create_analysis_job(self, trc_fname, evt_fname, str_time, stp_time,
                             cycle_time, sug_montage, bp_montage, analysis_procedure):
         # Precondition: Params have been validated
-        self.analizer_job_count.increment()
+        self.analyzer_job_count.increment()
         job_id = str(uuid.uuid4())
         job_state = TaskState()
         self.jobs[job_id] = job_state
@@ -150,7 +149,7 @@ class JobManager:
         return job_id
 
     def on_analysis_finished(self):
-        self.analizer_job_count.decrement()
+        self.analyzer_job_count.decrement()
 
 
 class TaskState:

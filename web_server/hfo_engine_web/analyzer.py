@@ -18,7 +18,9 @@ EVT_EXTENSION = 'evt'
 analyzer_bp = Blueprint('analyzer', __name__, url_prefix='/analyzer')
 
 
-@analyzer_bp.route('/upload_trc', methods=['GET','POST'])
+#            ANALYZER ENDPOINTS             #
+
+@analyzer_bp.route('/upload_trc', methods=['GET', 'POST'])
 def upload_trc():
     from .engine import upload_file
     return upload_file(request)
@@ -40,8 +42,7 @@ def trc_info(trc_fname):
 
 @analyzer_bp.route('/analyze', methods=['POST'])
 def analyze():
-    content = request.get_json(silent=True)
-
+    content = request.get_json()
     # Validate file exists
     trc_fname = secure_filename(content['trc_fname'])
     abs_trc_fname = os.path.join(current_app.config['TRC_FOLDER'], trc_fname)
