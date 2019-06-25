@@ -148,7 +148,7 @@ namespace HFO_ENGINE
         {
             File.Copy(trc_fname, this.GetTRCTempPath(trc_fname), true);
             Program.Controller.GetScreen_EEG().UpdateProgressDesc("Uploading TRC to the server...");
-            string uri_upload = this.GetAPI().URI() + "upload";
+            string uri_upload = this.GetAPI().GetUri_UploadTRC();
             WebClient webClient = new WebClient();
             void WebClientUploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
             {
@@ -172,7 +172,7 @@ namespace HFO_ENGINE
         private void SetTrcMetadata(string trc_fname)
         {
             this.Log("Setting TRC metadata");
-            string uri_trc_info = this.GetAPI().URI() + "trc_info/" + Path.GetFileName(trc_fname);
+            string uri_trc_info = this.GetAPI().GetUri_TrcInfo(Path.GetFileName(trc_fname));
             string json_resp = GetJsonSync(uri_trc_info);
             TRCInfo trc_info = JsonConvert.DeserializeObject<TRCInfo>(json_resp);
             this.Model.MontageNames = trc_info.montage_names;
@@ -216,7 +216,7 @@ namespace HFO_ENGINE
         private void AnalizeWith(AnalizerParams args)
         {
             //Analizer call
-            string uri_run = this.GetAPI().URI() + "hfo_analizer";
+            string uri_run = this.GetAPI().GetUri_Analizer();
             Dictionary<string, string> Params = new Dictionary<string, string>
             {
                 { "trc_fname", Path.GetFileName(args.TrcFile) },
@@ -241,7 +241,7 @@ namespace HFO_ENGINE
             {
                 //Keep updating progress bar while working remotely
                 string pid = run_response["task_id"];
-                string uri_task_state = this.GetAPI().URI() + "task_state/" + pid;
+                string uri_task_state = this.GetAPI().GetUri_JobState(pid);
                 int progress = 0;
                 do
                 {
@@ -258,7 +258,7 @@ namespace HFO_ENGINE
         private void DownloadEvt(string remote_evt_fname, string dest)
         {
             this.Log("Downloading evt");
-            string uri_get_evt = this.GetAPI().URI() + "download/evts/" + remote_evt_fname;
+            string uri_get_evt = this.GetAPI().GetUri_DownloadEvt(remote_evt_fname);
             using (var client = new WebClient()) client.DownloadFile(uri_get_evt, dest);
         }
         public bool IsAnalizing() { return this.Model.IsAnalizing; }
@@ -270,7 +270,7 @@ namespace HFO_ENGINE
             this.Model.IsConverting = true;
             this.GetScreen_Conv_1().UpdateProgressDescSafe("Uploading edf to the server...");
 
-            string uri_upload = this.GetAPI().URI() + "upload";
+            string uri_upload = this.GetAPI().GetUri_UploadEdf();
             WebClient webClient = new WebClient();
             void WebClientUploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
             {
@@ -301,7 +301,7 @@ namespace HFO_ENGINE
         }
         private Dictionary<string, string> GetChMapping(string edf_fname)
         {
-            string uri_suggestion = this.GetAPI().URI() + "edf_suggested_ch_map/" + Path.GetFileName(edf_fname);
+            string uri_suggestion = this.GetAPI().GetUri_Suggested_ChName_Translation(Path.GetFileName(edf_fname));
             string suggestion_response = this.GetJsonSync(uri_suggestion);
             SuggestionResponse suggestion_response_dict = JsonConvert.DeserializeObject<SuggestionResponse>(suggestion_response);
             return suggestion_response_dict.suggested_mapping;
@@ -318,7 +318,7 @@ namespace HFO_ENGINE
             this.GetScreen_Conv_3().UpdateProgressSafe(5);
 
             Thread conversion = new Thread( () => {
-                string uri_edf_to_trc = this.GetAPI().URI() + "edf_to_trc";
+                string uri_edf_to_trc = this.GetAPI().GetUri_Converter();
                 string serialized_conv_params = new JavaScriptSerializer().Serialize(this.GetConvParams());
                 string run_response_str = this.PostJsonSync(uri_edf_to_trc, serialized_conv_params);
                 JsonObject run_response = (JsonObject)JsonValue.Parse(run_response_str);
@@ -327,7 +327,7 @@ namespace HFO_ENGINE
                 else
                 {
                     string pid = run_response["task_id"];
-                    string uri_task_state = this.GetAPI().URI() + "task_state/" + pid;
+                    string uri_task_state = this.GetAPI().GetUri_JobState(pid);
                     int progress = 0;
                     do
                     {
@@ -371,7 +371,7 @@ namespace HFO_ENGINE
             webClient.DownloadProgressChanged += WebClientDownloadProgressChanged;
             webClient.DownloadFileCompleted += WebClientDownloadCompleted;
 
-            string uri_download_trc = this.GetAPI().URI() + "download/TRCs/" + remote_trc_fname;
+            string uri_download_trc = this.GetAPI().GetUri_DownloadTRC(remote_trc_fname);
             webClient.DownloadFileAsync(new Uri(uri_download_trc), trc_saving_path);
         }
         public bool IsConverting() { return this.Model.IsConverting; }
@@ -510,7 +510,23 @@ namespace HFO_ENGINE
         //Colaborators
         public string Hostname { get; set; }
         public string Port { get; set; }
-        public string URI() { return "http://" + this.Hostname + ":" + this.Port + "/"; }
+        public string URI() { return "http://" + this.Hostname + ":" + this.Port; }
+        public string GetUri_JobState(job_id) {return this.URI() + '/task_state/' + job_id; }
+
+        //Analizer URIs
+        public string GetUri_AnalizerBP() {return this.URI() + "/analyzer";}
+        public string GetUri_UploadTRC() {return this.GetUri_AnalizerBP() + "/upload_trc"; }
+        public string GetUri_TrcInfo(trc_fname) {return this.GetUri_AnalizerBP() + "/trc_info/" + trc_fname; }
+        public string GetUri_Analizer() {return this.GetUri_AnalizerBP() + "/analyze"; }
+        public string GetUri_DownloadEvt(evt_fname) {return this.GetUri_AnalizerBP() + "/download_evt/" + evt_fname; }
+
+        //Converter URIs
+        public string GetUri_AnalizerBP() {return this.URI() + "/converter";}
+        public string GetUri_UploadEdf() {return this.GetUri_ConverterBP() + "/upload_edf"; }
+        public string GetUri_Suggested_ChName_Translation(edf_fname) {return this.GetUri_ConverterBP() + "/suggested_ch_name_mapping/" + edf_fname; }
+        public string GetUri_Converter() { return this.GetUri_ConverterBP()+'/convert';}
+        public string GetUri_DownloadTRC(trc_fname) {return this.GetUri_ConverterBP() + "/download_trc/" + trc_fname; }
+
     }
 
     class AnalizerParams

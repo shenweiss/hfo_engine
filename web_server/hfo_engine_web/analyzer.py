@@ -90,7 +90,7 @@ def analyze():
                status.HTTP_409_CONFLICT
 
 
-@analyzer_bp.route('/download/evts/<path:evt_fname>')
+@analyzer_bp.route('/download_evt/<path:evt_fname>')
 def download_evt_file(evt_fname):
     evt_fname = secure_filename(evt_fname)
     abs_evt_fname = os.path.join(current_app.config['EVT_FOLDER'], evt_fname)
