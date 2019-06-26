@@ -84,7 +84,7 @@ def convert():
     return jsonify(task_id=job_id)
 
 
-@converter_bp.route('/download_trc/<path:filename>')
+@converter_bp.route('/download_trc/<path:trc_fname>')
 def download_trc(trc_fname):
     trc_fname = secure_filename(trc_fname)
     abs_trc_fname = os.path.join(current_app.config['TRC_FOLDER'], trc_fname)
