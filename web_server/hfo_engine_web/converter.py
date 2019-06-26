@@ -154,7 +154,6 @@ def conversion_procedure(edf_fname, ch_names_translation, job_state):
             job_state.status_code.value = status.HTTP_201_CREATED
 
     except Exception:
-        with job_state.error_msg.get_lock():
-            job_state.error_msg.value = 'There was an exception running conversion procedure'.encode('utf-8')
+        job_state.error_msg.value = 'There was an exception running conversion procedure'.encode('utf-8')
         with job_state.status_code.get_lock():
             job_state.status_code.value = status.HTTP_500_INTERNAL_SERVER_ERROR
