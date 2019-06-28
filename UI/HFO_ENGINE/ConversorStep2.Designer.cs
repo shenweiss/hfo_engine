@@ -39,6 +39,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.Confirm_translations_btn = new System.Windows.Forms.Button();
+            this.import_csv_btn = new System.Windows.Forms.Button();
             this.panel4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.PanelTranslation.SuspendLayout();
@@ -82,7 +83,7 @@
             this.PanelTranslations.AutoScroll = true;
             this.PanelTranslations.Location = new System.Drawing.Point(20, 120);
             this.PanelTranslations.Name = "PanelTranslations";
-            this.PanelTranslations.Size = new System.Drawing.Size(415, 327);
+            this.PanelTranslations.Size = new System.Drawing.Size(287, 327);
             this.PanelTranslations.TabIndex = 37;
             // 
             // PanelTranslation
@@ -143,7 +144,7 @@
             this.Confirm_translations_btn.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold);
             this.Confirm_translations_btn.ForeColor = System.Drawing.SystemColors.ControlLightLight;
             this.Confirm_translations_btn.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.Confirm_translations_btn.Location = new System.Drawing.Point(219, 471);
+            this.Confirm_translations_btn.Location = new System.Drawing.Point(252, 471);
             this.Confirm_translations_btn.Name = "Confirm_translations_btn";
             this.Confirm_translations_btn.Size = new System.Drawing.Size(183, 37);
             this.Confirm_translations_btn.TabIndex = 39;
@@ -151,12 +152,29 @@
             this.Confirm_translations_btn.UseVisualStyleBackColor = true;
             this.Confirm_translations_btn.Click += new System.EventHandler(this.Confirm_translations_btn_Click);
             // 
+            // import_csv_btn
+            // 
+            this.import_csv_btn.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.import_csv_btn.FlatAppearance.BorderSize = 2;
+            this.import_csv_btn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.import_csv_btn.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold);
+            this.import_csv_btn.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.import_csv_btn.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.import_csv_btn.Location = new System.Drawing.Point(313, 204);
+            this.import_csv_btn.Name = "import_csv_btn";
+            this.import_csv_btn.Size = new System.Drawing.Size(89, 147);
+            this.import_csv_btn.TabIndex = 40;
+            this.import_csv_btn.Text = "Import from csv";
+            this.import_csv_btn.UseVisualStyleBackColor = true;
+            this.import_csv_btn.Click += new System.EventHandler(this.import_csv_btn_Click);
+            // 
             // ConversorStep2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(66)))), ((int)(((byte)(82)))));
             this.ClientSize = new System.Drawing.Size(480, 542);
+            this.Controls.Add(this.import_csv_btn);
             this.Controls.Add(this.PanelTranslation);
             this.Controls.Add(this.Confirm_translations_btn);
             this.Controls.Add(this.label3);
@@ -187,5 +205,6 @@
         private System.Windows.Forms.TextBox ShortNameTextBox;
         private System.Windows.Forms.Button Confirm_translations_btn;
         private System.Windows.Forms.Panel PanelTranslation;
+        private System.Windows.Forms.Button import_csv_btn;
     }
 }

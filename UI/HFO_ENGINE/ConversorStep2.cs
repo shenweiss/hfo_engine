@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace HFO_ENGINE
         public ConversorStep2( Dictionary<string, string> translations)
         {
             InitializeComponent();
-            this.count = 0;
+            count = 0;
             
             foreach (var translation in translations)
             {
@@ -77,7 +78,7 @@ namespace HFO_ENGINE
                         }
                         if (!short_names.Add(short_name)) 
                         {
-                            MessageBox.Show(String.Format("The translation {0} can't is repeted. Please correct and retry.", short_name));
+                            MessageBox.Show(String.Format("The translation {0} is repeted. Please correct and retry.", short_name));
                             return;
                         }
                         i = 0;
@@ -87,6 +88,46 @@ namespace HFO_ENGINE
             }
 
             Program.Controller.ConfirmChMapping(translations);
+        }
+
+        private void import_csv_btn_Click(object sender, EventArgs e)
+        {
+            string csv_fname = "";
+            OpenFileDialog importcsvDialog = new OpenFileDialog
+            {
+                Title = "Browse csv",
+                CheckFileExists = true,
+                CheckPathExists = true,
+                DefaultExt = "csv",
+                Filter = "csv files(*.csv)| *.csv",
+                FilterIndex = 2,
+                RestoreDirectory = true,
+            };
+            if (importcsvDialog.ShowDialog() == DialogResult.OK)
+            {
+                csv_fname = importcsvDialog.FileName;
+                using (var reader = new StreamReader(@csv_fname))
+                {
+                    int count = 0;
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var values = line.Split(',');
+                        try
+                        {
+                            TextBox edf_ch_name = Controls.Find("LongNameTextBox_" + count.ToString(), true).FirstOrDefault() as TextBox;
+                            TextBox trc_ch_name = Controls.Find("ShortNameTextBox_" + count.ToString(), true).FirstOrDefault() as TextBox;
+                            edf_ch_name.Text = values[0];
+                            trc_ch_name.Text = values[1];
+                            count++;
+                        }
+                        catch (Exception err){
+                            MessageBox.Show("Csv is badly formed, each line should have format ----> EDF_CH_NAME , TRC_SHORT_NAME (where short is <=5 chars)");
+                        }
+                    }   
+                }
+            }
+
         }
     }
 }
