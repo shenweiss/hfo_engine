@@ -25,17 +25,17 @@ namespace Micromed.ExternalCalculation.DemoIIExternalCalculation
             //Cargo parametros
             //string trc_path = pluginParameters.ExchangeTraceFilePathList[0];
             string trc_path = "\"" + (pluginParameters.TraceFilePathList[0]).Replace("\\","/") + "\"";
-            string xml_out_path_real = "\"" + (pluginParameters.ExchangeEventFilePath).Replace("\\","/") + "\""; //donde lo voy a copiar despues por ssh
-            string fullPath = "C:/Program Files (x86)/Micromed/BrainQuick/Plugins/hfo_engine/HFO_ENGINE.exe";
+            string xml_out_path_real = "\"" + (pluginParameters.ExchangeEventFilePath).Replace("\\","/") + "\""; //donde lo voy a copiar despues 
+            string appPath = System.AppContext.BaseDirectory.Replace("\\", "/") + "Plugins/hfo_engine/HFO_ENGINE.exe";
             //string fullPath = @"%windir%\system32\notepad.exe";
             string args = "--trc=" + trc_path + " --xml=" + xml_out_path_real;
-            string log_file = "C:/System98/temp/ez_detect_plugin_log.txt";
-            File.WriteAllText(log_file, args);
+            //string log_file = "C:/System98/temp/ez_detect_plugin_log.txt";
+            //File.WriteAllText(log_file, appPath);
 
             ProcessStartInfo psi = new ProcessStartInfo
             {
-                FileName = Path.GetFileName(fullPath),
-                WorkingDirectory = Path.GetDirectoryName(fullPath),
+                FileName = Path.GetFileName(appPath),
+                WorkingDirectory = Path.GetDirectoryName(appPath),
                 Arguments = "--trc=" + trc_path + " --xml=" + xml_out_path_real
             };
             Process cmd = Process.Start(psi);
