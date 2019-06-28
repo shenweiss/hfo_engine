@@ -2,21 +2,19 @@
 This project has to do with user level usage, from BQ, from the GUI and inderectly calling the web server, which depends on ez_detect module.
 
 
-#Backend endpoints in C#
+#Backend endpoints
 
-public string URI() { return "http://" + this.Hostname + ":" + this.Port; }
-public string GetUri_JobState(string job_id) {return this.URI() + "/task_state/" + job_id; }
+welcome_msg ="https://hostname:port/"
+get_job_state = "https://hostname:port/task_state/job_id_string"
 
-//Analizer URIs
-public string GetUri_AnalizerBP() {return this.URI() + "/analyzer";}
-public string GetUri_UploadTRC() {return this.GetUri_AnalizerBP() + "/upload_trc"; }
-public string GetUri_TrcInfo(string trc_fname) {return this.GetUri_AnalizerBP() + "/trc_info/" + trc_fname; }
-public string GetUri_Analizer() {return this.GetUri_AnalizerBP() + "/analyze"; }
-public string GetUri_DownloadEvt(string evt_fname) {return this.GetUri_AnalizerBP() + "/download_evt/" + evt_fname; }
+#Analizer URIs
+upload_trc = "https://hostname:port/analyzer/upload_trc"
+trc_info = "https://hostname:port/analyzer/trc_info"
+analize_trc = "https://hostname:port/analyzer/analyze"
+download_evt = "https://hostname:port/analyzer/download_evt/evt_fname" 
 
-//Converter URIs
-public string GetUri_ConverterBP() {return this.URI() + "/converter";}
-public string GetUri_UploadEdf() {return this.GetUri_ConverterBP() + "/upload_edf"; }
-public string GetUri_Suggested_ChName_Translation(string edf_fname) {return this.GetUri_ConverterBP() + "/suggested_ch_name_mapping/" + edf_fname; }
-public string GetUri_Converter() { return this.GetUri_ConverterBP()+"/convert";}
-public string GetUri_DownloadTRC(string trc_fname) {return this.GetUri_ConverterBP() + "/download_trc/" + trc_fname; }
+#Converter URIs
+upload_edf = "https://hostname:port/converter/upload_edf"
+suggested_ch_name_mapping = "https://hostname:port/converter/suggested_ch_name_mapping/edf_fname"
+convert = "https://hostname:port/converter/convert"
+download_trc = "https://hostname:port/converter/download_trc/trc_fname" 
