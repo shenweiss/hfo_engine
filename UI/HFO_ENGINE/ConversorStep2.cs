@@ -78,7 +78,7 @@ namespace HFO_ENGINE
                         }
                         if (!short_names.Add(short_name)) 
                         {
-                            MessageBox.Show(String.Format("The translation {0} is repeted. Please correct and retry.", short_name));
+                            MessageBox.Show(String.Format("The translation {0} is repeated. Please correct and retry.", short_name));
                             return;
                         }
                         i = 0;
