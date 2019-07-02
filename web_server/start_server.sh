@@ -14,7 +14,7 @@ then
 	flask init-db
 fi
 
-IP=$(ip -4 addr show wlo1 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+IP=$(ip -4 addr show eno1 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 echo 'IP >' $IP 
 
 if [ $where == "--production" ]

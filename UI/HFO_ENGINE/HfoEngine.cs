@@ -20,6 +20,7 @@ using System.ComponentModel;
 
 namespace HFO_ENGINE
 {
+   
     //Classes
     static class Program {
 
@@ -47,14 +48,15 @@ namespace HFO_ENGINE
 
         //Collaborators
         private Model Model { get; set; }
-
+        private string REPO_MANTAINER_EMAIL { get; set; } = "tpastore@dc.uba.ar";
+        
         //************ Methods **************//
         public void Init(string[] args) {
             //Command line parsing
             Parser.Default.ParseArguments<Options>(args)
             .WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts))
             .WithNotParsed<Options>((errs) => HandleParseError(errs));
-
+            this.TestDefaultConnection();
             Application.Run(this.GetScreen_Home());
         }
 
@@ -378,13 +380,43 @@ namespace HFO_ENGINE
         public void SetConvFlag(bool flag) { this.Model.IsConverting = flag; }
 
         //General Program Logic
-        public void TestConnection()
-        {
+        public void TestConnection() { 
+
+            HttpClient httpClient = new HttpClient();
             string index_uri = Program.Controller.GetAPI().URI();
-            string json_index_str = this.GetJsonSync(index_uri);
-            JsonObject json_index = (JsonObject)JsonValue.Parse(json_index_str);
-            MessageBox.Show(json_index["message"]);
+            try{
+                HttpResponseMessage response = httpClient.GetAsync(index_uri).Result;
+                response.EnsureSuccessStatusCode();    // Throw if not a success code.
+                string json_index_str = response.Content.ReadAsStringAsync().Result;
+                JsonObject json_index = (JsonObject)JsonValue.Parse(json_index_str);
+                MessageBox.Show(json_index["message"] + ". Server is up!");
+            }
+            catch (Exception e)
+            {
+                string server_down_msg = "Server is down. Contact mantainer with email: " + REPO_MANTAINER_EMAIL;
+                MessageBox.Show(server_down_msg);
+            }
         }
+
+        public void TestDefaultConnection()
+        {
+            HttpClient httpClient = new HttpClient();
+            string index_uri = Program.Controller.GetAPI().URI();
+            try
+            {
+                HttpResponseMessage response = httpClient.GetAsync(index_uri).Result;
+                response.EnsureSuccessStatusCode();    // Throw if not a success code.
+                string json_index_str = response.Content.ReadAsStringAsync().Result;
+                JsonObject json_index = (JsonObject)JsonValue.Parse(json_index_str);
+                MessageBox.Show(json_index["message"] + ". Grito server is up!");
+            }
+            catch (Exception e)
+            {
+                string server_down_msg = "Warning! Grito server is not running, set up another server in advanced settings and test conection prior to use the app.";
+                MessageBox.Show(server_down_msg);
+            }
+        }
+
         private void RunOptionsAndReturnExitCode(Options opts)
         {
             if (!string.IsNullOrEmpty(opts.TrcFile)) {
