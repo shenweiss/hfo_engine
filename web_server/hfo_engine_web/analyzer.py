@@ -115,11 +115,20 @@ def analysis_procedure(trc_fname, evt_fname, str_time, stp_time, cycle_time,
                        sug_montage, bp_montage, job_state, job_manager):
     job_state.progress.update(1)
 
-    paths = config.getAllPaths(trc_fname, evt_fname)
     config.clean_previous_execution()
+
     try:
-        hfo_annotate(paths, str_time, stp_time, cycle_time,
-                     sug_montage, bp_montage, progress_notifier=job_state.progress)
+
+        hfo_annotate(trc_fname=trc_fname,
+                     bipolar_montage=bp_montage,
+                     suggested_montage=sug_montage,
+                     start_time=str_time,
+                     stop_time=stp_time,
+                     cycle_time=cycle_time,
+                     evt_fname=evt_fname,
+                     progress_notifier=job_state.progress
+                     )
+
         with job_state.status_code.get_lock():
             job_state.status_code.value = status.HTTP_201_CREATED
 
