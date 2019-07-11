@@ -3,7 +3,7 @@ import uuid
 from ctypes import c_char_p
 from multiprocessing import Process, Value, Manager
 
-from ez_detect.config import ProgressNotifier
+from ez_detect.progress_notifier import ProgressNotifier
 from flask import (
     Blueprint, render_template,
     current_app, jsonify
