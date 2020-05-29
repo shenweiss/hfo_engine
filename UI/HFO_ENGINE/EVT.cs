@@ -19,14 +19,14 @@ namespace HFO_ENGINE
         }
         public void SetEvtFile(string evt_fname)
         {
-            this.EvtPath_txtBx.Text = Path.GetDirectoryName(evt_fname);
+            this.EvtPath_txtBx.Text = Path.GetDirectoryName(evt_fname).Replace("\\", "/");
             this.Evt_fname_txtBox.Text = Path.GetFileNameWithoutExtension(evt_fname);
         }
 
         private void Browse_evt_dir_btn_Click(object sender, EventArgs e) {
             var dialog = new FolderBrowserDialog();
             dialog.ShowDialog();
-            EvtPath_txtBx.Text = dialog.SelectedPath + "\\";
+            EvtPath_txtBx.Text = dialog.SelectedPath.Replace("\\", "/");
         }
 
         private void Browse_evt_dir_btn_MouseLeave(object sender, EventArgs e)
@@ -42,7 +42,9 @@ namespace HFO_ENGINE
 
         private void Evt_save_btn_Click(object sender, EventArgs e)
         {
-            string evt_fname = Path.GetFileNameWithoutExtension(Evt_fname_txtBox.Text) + ".evt";
+            string evt_fname = Evt_fname_txtBox.Text;
+            if (Path.GetExtension(evt_fname) != ".evt") evt_fname = evt_fname + ".evt";
+            
             Program.Controller.SetEvtFile(EvtPath_txtBx.Text, evt_fname);
 
         }

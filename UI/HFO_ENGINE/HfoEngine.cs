@@ -129,8 +129,9 @@ namespace HFO_ENGINE
             if (this.IsBusy()) this.UnavailableOptionMsg();
             else
             {
-                this.Model.AnalizerParams.EvtFile = evt_dir + evt_fname;
-                this.Log(String.Format("Evt saving path setted to {0}", evt_dir + evt_fname));
+                this.Model.AnalizerParams.EvtFile = evt_dir + "/" + evt_fname;
+                Console.WriteLine("Setting evt name to {0} ", Model.AnalizerParams.EvtFile);
+                this.Log(String.Format("Evt saving path setted to {0}", Model.AnalizerParams.EvtFile));
             }
         }
         public void SetAdvancedSettings(string hostname, string port, string log_file, string trc_temp_dir)
@@ -421,10 +422,12 @@ namespace HFO_ENGINE
         {
             if (!string.IsNullOrEmpty(opts.TrcFile)) {
                 this.Model.AnalizerParams.TrcFile = (opts.TrcFile).Replace("\\", "/");
+                Console.WriteLine("Input Trc name {0} ", GetAnalizerParams().TrcFile);
                 this.GetScreen_EEG().SetTrcFile( GetAnalizerParams().TrcFile );
             }
             if (!string.IsNullOrEmpty(opts.EvtFile)) {
                 this.Model.AnalizerParams.EvtFile = (opts.EvtFile).Replace("\\", "/");
+                Console.WriteLine("Input evt name {0} ", GetAnalizerParams().EvtFile);
                 this.GetScreen_Evt().SetEvtFile( GetAnalizerParams().EvtFile);
             }
         }
@@ -463,7 +466,7 @@ namespace HFO_ENGINE
         }
         private void Log(string info)
         {
-            bool log_activated = false;
+            bool log_activated = true;
             if (log_activated)
             {
                 using (System.IO.StreamWriter file = new System.IO.StreamWriter(this.GetLogFile(), true))
