@@ -56,7 +56,7 @@ Description of software: HFO-Engine consists of the HFO-Engine plug-in client fo
 For further information please see the HFO-Engine User’s manual.
 
 Windows installation instructions:
-- In https://github.com/shenweiss/ From the HFO_engine repository on the master branch in the bundles branch download HFO_engine_V_0.0.2.rar
+- In https://github.com/shenweiss/ From the HFO_engine repository on the master branch in the bundles folder download HFO_engine_V_0.0.2.rar
 - unrar the files in the BQ_plugin_driver_dlls folder to the Micromed/BrainQuick/Plugins directory
 - create a folder hfo_engine in the Plugins directory
 - unrar the files in the hfo_engine folder to the ~/Plugins/hfo_engine directory
