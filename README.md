@@ -71,10 +71,10 @@ Linux installation instructions
 
 a) install git repositories
 - Create a project directory ~/ for the project and in this directory run the following commands
-- git clone http://gitlab.liaa.dc.uba.ar/tju-uba/io_trc.git
-- git clone http://gitlab.liaa.dc.uba.ar/tju-uba/hfo_engine.git
-- git clone http://gitlab.liaa.dc.uba.ar/tju-uba/io_evt.git
-- git clone http://gitlab.liaa.dc.uba.ar/tju-uba/ez-detect.git
+- git clone http://github.com/shenweiss/io_trc.git
+- git clone http://github.com/shenweiss/hfo_engine.git
+- git clone http://github.com/shenweiss/io_evt.git
+- git clone http://github.com/shenweiss/ez-detect.git
 - in the ez-detect folder change the branch from origin to develop with the command
 1. git checkout develop
 
