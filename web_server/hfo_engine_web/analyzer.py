@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from sys import path
 
 from ez_detect import config, hfo_annotate
 from flask import (
@@ -13,7 +14,7 @@ from werkzeug.utils import secure_filename
 from .engine import file_extension
 
 TRC_EXTENSION = 'TRC'
-EVT_EXTENSION = 'evt'
+EVT_EXTENSION = 'EVT'
 
 analyzer_bp = Blueprint('analyzer', __name__, url_prefix='/analyzer')
 
@@ -116,26 +117,45 @@ def analysis_procedure(trc_fname, evt_fname, str_time, stp_time, cycle_time,
     job_state.progress.update(1)
 
     config.clean_previous_execution()
+#try:
+    hfo_annotate(trc_fname, str_time, stp_time, 600, sug_montage, bp_montage, evt_fname, path)
+    job_state.progress.update(100)
+    job_manager.on_analysis_finished()
+    #with job_state.status_code.get_lock():
+    #    job_state.status_code.value = status.HTTP_201_CREATED
+    
+    #except Exception:
+    #    job_state.error_msg.value = "hfo_annotate internal error".encode('utf-8')
+    #    with job_state.status_code.get_lock():
+    #        job_state.status_code.value = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-    try:
+    #finally:
+    #    job_manager.on_analysis_finished()
 
-        hfo_annotate(trc_fname=trc_fname,
-                     bipolar_montage=bp_montage,
-                     suggested_montage=sug_montage,
-                     start_time=str_time,
-                     stop_time=stp_time,
-                     cycle_time=cycle_time,
-                     evt_fname=evt_fname,
-                     progress_notifier=job_state.progress
-                     )
+#    try:
+#        #hfo_annotate(trc_fname, str_time, stp_time, cycle_time, sug_montage, bp_montage, evt_fname, path)
+#        _update_progress(progress_notifier, 100)
+#        with job_state.status_code.get_lock():
+#            job_state.status_code.value = status.HTTP_201_CREATED
+#    
+#    except Exception:
+#        job_state.error_msg.value = "hfo_annotate internal error".encode('utf-8')
+#        with job_state.status_code.get_lock():
+#            job_state.status_code.value = status.HTTP_500_INTERNAL_SERVER_ERROR
+#
+#    finally:
+#        job_manager.on_analysis_finished()
 
-        with job_state.status_code.get_lock():
-            job_state.status_code.value = status.HTTP_201_CREATED
 
-    except Exception:
-        job_state.error_msg.value = "hfo_annotate internal error".encode('utf-8')
-        with job_state.status_code.get_lock():
-            job_state.status_code.value = status.HTTP_500_INTERNAL_SERVER_ERROR
+#try:
+    #hfo_annotate(trc_fname, str_time, stp_time, cycle_time, sug_montage, bp_montage, evt_fname, path)
+    #with job_state.status_code.get_lock():
+    #    job_state.status_code.value = status.HTTP_201_CREATED
+    
+    #except Exception:
+    #    job_state.error_msg.value = "hfo_annotate internal error".encode('utf-8')
+    #    with job_state.status_code.get_lock():
+    #        job_state.status_code.value = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-    finally:
-        job_manager.on_analysis_finished()
+    #finally:
+    #    job_manager.on_analysis_finished()

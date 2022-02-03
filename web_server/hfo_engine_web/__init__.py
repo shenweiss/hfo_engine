@@ -30,7 +30,6 @@ def create_app(test_config=None):
     app.config['EDF_FOLDER'] = EDF_FOLDER
     app.config['TRC_FOLDER'] = TRC_FOLDER
     app.config['EVT_FOLDER'] = EVT_FOLDER
-    app.config['MAX_CONTENT_LENGTH'] = 5 * (1024 ** 3)  # 5 GB
 
     app.config['JOB_MANAGER'] = JobManager(max_jobs=MAX_ANALYZER_JOBS_RUNNING)
 

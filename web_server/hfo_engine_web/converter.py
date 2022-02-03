@@ -1,4 +1,5 @@
 import os
+import numpy
 from pathlib import Path
 
 import mne
@@ -7,6 +8,7 @@ from flask import (
     current_app, jsonify
 )
 from flask_api import status
+from mne.io.edf.edf import read_raw_edf
 from trcio import write_raw_trc
 from werkzeug.utils import secure_filename
 
@@ -14,7 +16,7 @@ from hfo_engine_web.db import get_db
 from .engine import file_extension
 
 TRC_EXTENSION = 'TRC'
-EDF_EXTENSION = 'edf'
+EDF_EXTENSION = 'EDF'
 TRC_MAX_CH_NAME_LEN = 5
 
 converter_bp = Blueprint('converter', __name__, url_prefix='/converter')
@@ -105,7 +107,7 @@ def suggestion_for(ch_name, known_translation):
 
 
 def suggested_mapping(edf_fname):
-    raw_edf = mne.io.read_raw_edf(edf_fname, preload=True)
+    raw_edf = read_raw_edf(edf_fname)
     raw_edf.pick_types(eeg=True, stim=False)
     translation = dict()
     db = get_db()
@@ -115,45 +117,59 @@ def suggested_mapping(edf_fname):
         translation[ch_name] = suggestion_for(ch_name, known_translation)
     return translation
 
+def new_func(edf_fname):
+    raw_edf = mne.io.read_raw_edf(edf_fname, preload=True)
+    return raw_edf
+
 
 def conversion_procedure(edf_fname, ch_names_translation, job_state):
-    try:
-        job_state.progress.update(1)
-        raw_edf = mne.io.read_raw_edf(edf_fname, preload=True)
-        job_state.progress.update(10)
-        raw_edf.pick_types(eeg=True, stim=False)
+#   try:
+    job_state.progress.update(1)
+    raw_edf = mne.io.read_raw_edf(edf_fname, preload=True)
+    job_state.progress.update(10)
+    raw_edf.pick_types(eeg=True, stim=False)
 
-        # WARNING
-        # Converting unit of data, this is needed because Shennan edfs are not well formed
-        # If data comes in micro volts, this information is stored
-        # in the info dict in the unit_mul entry as -6. If it is volt, then it is stored as 1.
-        # info['chs'][0]['unit'] info['chs'][0]['unit_mul']
-        # to_rename = {x: x.split(' ')[1].split('-')[0] for x in raw_edf.ch_names}
-        raw_edf._data *= 1e-06  # From micro volts to volts
-        job_state.progress.update(30)
+    # WARNING
+    # Converting unit of data, this is needed because Shennan edfs are not well formed
+    # If data comes in micro volts, this information is stored
+    # in the info dict in the unit_mul entry as -6. If it is volt, then it is stored as 1.
+    # info['chs'][0]['unit'] info['chs'][0]['unit_mul']
+    # to_rename = {x: x.split(' ')[1].split('-')[0] for x in raw_edf.ch_names}
+    
+    print('Performing amplitude test to determine scaling value of EDF test')
+    amptest=numpy.abs(raw_edf._data)
+    med_eeg_val=numpy.median(amptest, axis=1)
+    med_eeg_val=numpy.median(med_eeg_val)
+    if med_eeg_val < .1:
+        raw_edf._data *= 1
+        print(' -unscaled')
+    else:
+        raw_edf._data *= 1e-6
+        print(' scaled down')
+    job_state.progress.update(30)
 
-        # Channel renaming and persistence of latest mapping
-        to_rename = {long: short for long, short in ch_names_translation.items() if long != short}
-        raw_edf.rename_channels(to_rename)
-        db = get_db()
-        for long, short in to_rename.items():
-            db.execute(
-                'REPLACE INTO ch_name_translation'
-                ' VALUES (?,?)',
-                (long, short)
-            )
-        db.commit()
-        job_state.progress.update(50)
+    # Channel renaming and persistence of latest mapping
+    to_rename = {long: short for long, short in ch_names_translation.items() if long != short}
+    raw_edf.rename_channels(to_rename)
+    db = get_db()
+    for long, short in to_rename.items():
+        db.execute(
+            'REPLACE INTO ch_name_translation'
+            ' VALUES (?,?)',
+            (long, short)
+        )
+    db.commit()
+    job_state.progress.update(50)
 
-        # Write the TRC
-        trc_fname = Path(edf_fname).stem + '.TRC'
-        abs_trc_fname = os.path.join(current_app.config['TRC_FOLDER'], trc_fname)
-        write_raw_trc(raw_edf, abs_trc_fname)
-        job_state.progress.update(100)
-        with job_state.status_code.get_lock():
-            job_state.status_code.value = status.HTTP_201_CREATED
+    # Write the TRC
+    trc_fname = Path(edf_fname).stem + '.TRC'
+    abs_trc_fname = os.path.join(current_app.config['TRC_FOLDER'], trc_fname)
+    write_raw_trc(raw_edf, abs_trc_fname)
+    job_state.progress.update(100)
+    with job_state.status_code.get_lock():
+        job_state.status_code.value = status.HTTP_201_CREATED
 
-    except Exception:
-        job_state.error_msg.value = 'There was an exception running conversion procedure'.encode('utf-8')
-        with job_state.status_code.get_lock():
-            job_state.status_code.value = status.HTTP_500_INTERNAL_SERVER_ERROR
+ #   except Exception:
+ #       job_state.error_msg.value = 'There was an exception running conversion procedure'.encode('utf-8')
+ #       with job_state.status_code.get_lock():
+ #           job_state.status_code.value = status.HTTP_500_INTERNAL_SERVER_ERROR

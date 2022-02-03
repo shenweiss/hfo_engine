@@ -3,7 +3,7 @@ import uuid
 from ctypes import c_char_p
 from multiprocessing import Process, Value, Manager
 
-from ez_detect.progress_notifier import ProgressNotifier
+from ez_detect.config import ProgressNotifier
 from flask import (
     Blueprint, render_template,
     current_app, jsonify
@@ -37,7 +37,7 @@ def task_state(job_id):
 
 #        SHARED LOGIC         #
 
-EDF_EXTENSION = 'edf'
+EDF_EXTENSION = 'EDF'
 TRC_EXTENSION = 'TRC'
 
 
@@ -55,7 +55,7 @@ def get_saving_fname(fname):
 
 def file_extension(filename):
     try:
-        return filename.rsplit('.', 1)[1]
+        return filename.rsplit('.', 1)[1].upper()
     except IndexError:
         raise ValueError('There is no extension in filename ' + filename)
 

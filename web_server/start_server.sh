@@ -2,8 +2,8 @@
 where=$1
 init_db=$2
 
-source venv/bin/activate
-#pyenv activate shennan
+source /home/sweiss/anaconda3/bin/activate base
+#pyenv activate base
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
@@ -19,8 +19,7 @@ echo 'IP >' $IP
 
 if [ $where == "--production" ]
 then
-	MAX_BODY_SIZE=5368709120
-	waitress-serve --max-request-body-size=$MAX_BODY_SIZE --call 'hfo_engine_web:create_app'
+	waitress-serve --max-request-body-size=20368709120 --call 'hfo_engine_web:create_app'
 else
 	export FLASK_ENV=development
 	flask run
