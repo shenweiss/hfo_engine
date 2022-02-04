@@ -24,7 +24,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTH
 
 Notes: Some code may refer to an entity named Fastwave LLC. Fastwave LLC has been dissolved and maintains no ownership over any property. 
 
-Dedication: I would like to thank my daughter Sabine Weiss who missed me while I was working on this software. I would also like to thank the other software authors who worked with me in sickness and in health. 
+Dedication: I would like to thank my daughter Sabine Weiss who missed me while I was working on this software. I would also like to thank the other software authors who worked with me in sickness and in health. Special thanks goes to Zac Waldman for his work on EZ-top, Federico Raimondo for his work on CUDAICA and TRC import and export, and Diego Slezak for overseeing the design and execution of HFO-Engine.  
 
 Recommended Literature (please read and cite the papers appended below if you utilize this software in your research):
 
