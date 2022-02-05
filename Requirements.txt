@@ -26,7 +26,7 @@ Werkzeug==0.15.5
 zipp==0.5.1
 pytz==2021.3
 tzlocal==4.1
--e git+http://github.com/shenweiss/io_evt.git@3d0d809c99273d9d2d48d659517bd8b4bac100a4#egg=evtio
--e git+http://github.com/shenweiss/ez-detect.git@4b7752a35e82f2ec8bf9d31024df7f3e35ddf610#egg=ez_detect
--e git+http://github.com/shenweiss/hfo_engine.git@4f5b5ddebdd1398e84e6aca2d956eef739ce7ea6#egg=hfo_engine_web&subdirectory=web_server
--e git+http://github.com/shenweiss/io_trc.git@f63fb48ad8663f2d635ba27282e454cc5d2fadac#egg=trcio
+-e git+http://github.com/shenweiss/io_evt.git
+-e git+http://github.com/shenweiss/ez-detect.git
+-e git+http://github.com/shenweiss/hfo_engine.git
+-e git+http://github.com/shenweiss/io_trc.git
