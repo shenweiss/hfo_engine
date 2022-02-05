@@ -18,8 +18,7 @@ copies of the Software, and to permit persons to whom the Software is furnished 
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Notes: Some code may refer to an entity named Fastwave LLC. Fastwave LLC has been dissolved and maintains no ownership over any property. 
@@ -47,7 +46,7 @@ Song I, Orosz I, Chervoneva I, Waldman ZJ, Fried I, Wu C, Sharan A, Salamon N, G
 
 Ripples Have Distinct Spectral Properties and Phase-Amplitude Coupling With Slow Waves, but Indistinct Unit Firing, in Human Epileptogenic Hippocampus. Weiss SA, Song I, Leng M, Pastore T, Slezak D, Waldman Z, Orosz I, Gorniak R, Donmez M, Sharan A, Wu C, Fried I, Sperling MR, Bragin A, Engel J Jr, Nir Y, Staba R. Front Neurol. 2020 Mar 24;11:174. doi: 10.3389/fneur.2020.00174. eCollection 2020. PMID: 32292384 
 
-System Requirements: A Windows 7 or above system running Brain Quick version 1. This plug-in has not yet been tested with the yet to be released Brain Quick version 2. A second system running Linux (tested on Ubuntu 20), with an NVIDIA GPU, that performs the data processing. On the Linux system, at least 64 GB of RAM is required, although over 100 GB of RAM is recommended. A swapdisk for vistual memory of at least 10GB is recommended. Linux software requirements include either Matlab 2017a or later or the equivalent Matlab Compiler Runtime will need to be installed as well as Python 3.5.2 and Anaconda 3 4.2 or above. Other dependencies are stated below in the instructions or will be installed automatically. 
+System Requirements: A Windows 7 or above system running Brain Quick version 1. This plug-in has not yet been tested with the yet to be released Brain Quick version 2. A second system running Linux (tested on Ubuntu 20), with an NVIDIA GPU, that performs the data processing. On the Linux system, at least 64 GB of RAM is required, although over 100 GB of RAM is recommended. A swapdisk for vistual memory of at least 10GB is recommended. Linux software requirements include Matlab 2017a or later, Python 3.5.2 and Anaconda 3 4.2 or above. Other dependencies are stated below in the instructions or will be installed automatically. Note that it may be possible to use the MCR instead of purchasing Matlab, but MCR has a different architecture for running Matlab within Python and the code will need to be modififed. 
 
 Test system: Hardware: Total Intel Xeon Cores/ 2.1GHz Base Frequency 40 Total Cores with Hyperthreading Enabled 1x 6230 CPU, 128GB of High Performance DDR, 2933 MHz ECC Memory, 4x32GB Memory Modules,6 Gbps, 1 x RTX 4000 GPU / 2034 CUDA Cores / 8 GB Memory. Host operating system: Ubuntu 20.04.3 LTS. Guest VM operating system: Windows 10.  Software on host Python 3.8.11, Conda version 4.10.3. 
 
@@ -95,10 +94,9 @@ c) installing ez-detect
 - note any errors in the pip dependency resolver
 - download python3 setuptools
 - in the ez-detect directory run python3 setup.py develop
-- edit config.py in the ~/ez-detect/ez_detect/ folder and change project root
--- copy the cudaica binary executable to the ~/ez-detect/ez_detect/matlabcode/cudaica/ folder overwriting the existing cudaica file there 
-- In your matlab directory go to matlab_path/extern/engines/python/ and run:
-$python3 setup.py install
+- edit config.py in the ~/ez-detect/ez_detect/ folder and change paths
+- copy the cudaica binary executable to the ~/ez-detect/ez_detect/matlabcode/cudaica/ folder overwriting the existing cudaica file there 
+- In your matlab directory go to matlab_path/extern/engines/python/ and run: $python3 setup.py install
 
 d) installing io_trc code
 - go to io_trc directory
@@ -114,7 +112,7 @@ f) installing the hfo_engine webserver
 - go to the ~/hfo_engine/web_server directory
 - run $python3 setup.py develop
 - to find the directory of your virtual environment run conda env list 
-- edit line 5 of the start_server.sh file to reflect your virtual environment
+- edit line 5 of the start_server.sh file to reflect your virtual environment (remember to add bin activate)
 example
 	# conda environments:
 	# base                  *  /home/sweiss/anaconda3
@@ -122,6 +120,9 @@ example
 	line 5: source /home/sweiss/anaconda3/bin/activate
 - $./start_server.sh --production --init
 - $./start_server.sh --production
+- Be careful in the start_server script how the IP address is assigned, also a specific port can be assigned in the waitress command. Port 8080 is the default.
+- You may also need to install llvmlite $ conda install --channel=numba llvmlite
+- You may also need to downgrade markdown $ pip3 install Markdown==3.3.4
 
 g) Add your paths of the project directory to the HFO-Engine/EZ-detect code:
 Lines that need manual path entry
