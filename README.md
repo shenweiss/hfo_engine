@@ -63,6 +63,9 @@ Anaconda is needed mainly for virtual environments. Errors were encountered in b
 ** A note about Anaconda virtual environments **
 A new virtual environment should be initiated for this project and it does not need to import all of Anaconda.(ex. conda create --prefix /home/sweiss/hfoenv python=3.7.12)
 
+** A note about Matlab engine for Python **
+Matlab Engine for Python from versions R2022a and above are not operational as of now. R2022 adds webserver functionality that is not compatible with Flask functions. Until this is resolved in a future release Matlab Engine for Python requirements are R2021b or earlier. 
+
 Test system: Hardware: Total Intel Xeon Cores/ 2.1GHz Base Frequency 40 Total Cores with Hyperthreading Enabled 1x 6230 CPU, 128GB of High Performance DDR, 2933 MHz ECC Memory, 4x32GB Memory Modules,6 Gbps, 1 x RTX 4000 GPU / 2034 CUDA Cores / 8 GB Memory. Host operating system: Ubuntu 20.04.3 LTS. Guest VM operating system: Windows 10.  Software on host Python 3.8.11, Conda version 4.10.3. Co
 
 Description of software: HFO-Engine consists of the HFO-Engine plug-in client for Micromed Brainquick that operates on Windows 7 or above, and a HFO-Engine webserver that interfaces with the HFO-Engine plug-in client and operates in Linux. The HFO-Engine client in Windows can be executed within Brainquick or as a stand alone. The HFO Engine webserver on the Linux system, that receives commands from HFO-engine client, interfaces with EZ-detect (the HFO detector) which also operates in Linux.  Installation of this package requires a moderate-advanced proficiency in Linux and familiarity with Python and also Matlab.
