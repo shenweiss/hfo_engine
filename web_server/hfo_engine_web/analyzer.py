@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from sys import path
 
-from ez_detect import config, hfo_annotate
+from ez_detect import config, hfo_annotate, hfo_annotate_nothreads
 from flask import (
     Blueprint, request, send_from_directory,
     current_app, jsonify
@@ -119,6 +119,8 @@ def analysis_procedure(trc_fname, evt_fname, str_time, stp_time, cycle_time,
     config.clean_previous_execution()
 #try:
     hfo_annotate(trc_fname, str_time, stp_time, 600, sug_montage, bp_montage, evt_fname, path)
+    #LFP version
+    #hfo_annotate_nothreads.hfo_annotate_nothreads(trc_fname, str_time, stp_time, 600, sug_montage, bp_montage, evt_fname, path)
     job_state.progress.update(100)
     job_manager.on_analysis_finished()
     #with job_state.status_code.get_lock():
