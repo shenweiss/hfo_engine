@@ -1,4 +1,4 @@
-*Installation Instructions for HFO-Engine and EZ-Detect version 1.0.1 (2014-2022)
+*Installation Instructions for HFO-Engine and EZ-Detect version 1.0.2 (2014-2022)
 
 Software Authors: Shennan Weiss M.D. Ph.D., Tomas Pastore M.S., Zachary Waldman M.S., Inkyung Song Ph.D., Matthias Gatti M.S., Federico Raimondo Ph.D., Diego Slezak Ph.D. 
 
@@ -9,9 +9,9 @@ Brooklyn, NY
 
 Listserv for users: send email to hfoengine-request@freelists.org with 'subscribe' in the Subject field (no quotes) 
 
-Date: 2/2022	
+Date: 8/2022	
 
-Purpose of software: To reduce/differentiate artifact and then detect, categorize, and quantify HFOs and epileptiform spikes in intracranial EEG recordings, and annotate these detections in the commercial EEG viewer Brain Quick™ produced by Micromed™ and save the detailed HFO and spike data as a Matlab Mathworks file. 
+Purpose of software: To reduce/differentiate artifact and then detect0, categorize, and quantify HFOs and epileptiform spikes in intracranial EEG recordings, and annotate these detections in the commercial EEG viewer Brain Quick™ produced by Micromed™ and save the detailed HFO and spike data as a Matlab Mathworks file. 
 
 Support: This work was fully supported by NIH/NINDS K23 NS094633 (SAW), and a Junior Investigator Award from the American Epilepsy Society (SAW).
 
@@ -199,6 +199,12 @@ v1.0.1 Modifications include:
 - in eztop_putou_e1.m added metadata to the saved data to correct for error in writing annotations of multiple blocks
 - in evtio/io.py added code to allow for correct annotations of multiple blocks of data
 - in evtop/io.py added code to permit annotations of channels recorded in bipolar montage except for channels moved to bipolar montage 
+
+v1.0.2 Modifications include:
+-------------------------
+- New DSP pipeline optimized for detecting HFOs and spikes in LFP data recorded from microelectrode data. Please replace line 121 with line 123 of the analyzer.py. To import microelectrode data, and optimize this data using ICA, please see the new preLFP respository.
+- 
+
 
 Benchmarks
 -------------------
