@@ -204,7 +204,7 @@ v1.0.2 Modifications include:
 -------------------------
 - New DSP pipeline optimized for detecting HFOs and spikes in LFP data recorded from microelectrode data. Please replace line 121 with line 123 of the analyzer.py. To import microelectrode data, and optimize this data using ICA, please see the new preLFP respository. Note the LFP recordings should be analyzed only in referential mode
 - The preprocessing function was improved to better deal with mixed referential and bipolar data and improve processing time. 
-
+- improved processing time of function to delete short duration < 3 cycle events
 
 Benchmarks
 -------------------
